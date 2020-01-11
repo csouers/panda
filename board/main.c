@@ -692,7 +692,7 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
     //puts("Fan speed: "); puth((unsigned int) fan_rpm); puts("rpm\n");
 
     // set green LED to be controls allowed
-    current_board->set_led(LED_GREEN, controls_allowed);
+    //current_board->set_led(LED_GREEN, controls_allowed);
 
     // turn off the blue LED, turned on by CAN
     // unless we are in power saving mode
@@ -710,15 +710,15 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
       puts("EON hasn't sent a heartbeat for 0x");
       puth(heartbeat_counter);
       puts(" seconds. Safety is set to SILENT mode.\n");
-      if (current_safety_mode != SAFETY_SILENT) {
-        set_safety_mode(SAFETY_SILENT, 0U);
-      }
+      // if (current_safety_mode != SAFETY_SILENT) {
+      //   set_safety_mode(SAFETY_SILENT, 0U);
+      // }
       if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
         set_power_save_state(POWER_SAVE_STATUS_ENABLED);
       }
     }
 
-    // enter CDP mode when car starts to ensure we are charging a turned off EON
+    // // enter CDP mode when car starts to ensure we are charging a turned off EON
     if (check_started() && (usb_power_mode != USB_POWER_CDP)) {
       current_board->set_usb_power_mode(USB_POWER_CDP);
     }
@@ -727,8 +727,8 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
     // check registers
     check_registers();
 
-    // set ignition_can to false after 2s of no CAN seen
-    if (ignition_can_cnt > 2U) {
+    // set ignition_can to false after 5s of no CAN seen
+    if (ignition_can_cnt > 5U) {
       ignition_can = false;
     };
 
@@ -811,7 +811,7 @@ int main(void) {
   // use TIM2->CNT to read
 
   // init to SILENT and can silent
-  set_safety_mode(SAFETY_SILENT, 0);
+  set_safety_mode(SAFETY_ALLOUTPUT, 0);
 
   // enable CAN TXs
   current_board->enable_can_transcievers(true);
@@ -841,19 +841,19 @@ int main(void) {
       #ifdef DEBUG_FAULTS
       if(fault_status == FAULT_STATUS_NONE){
       #endif
-        int div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4 : 1);
-
-        // useful for debugging, fade breaks = panda is overloaded
-        for (int div_mode_loop = 0; div_mode_loop < div_mode; div_mode_loop++) {
-          for (int fade = 0; fade < 1024; fade += 8) {
-            for (int i = 0; i < (128/div_mode); i++) {
-              current_board->set_led(LED_RED, 1);
-              if (fade < 512) { delay(fade); } else { delay(1024-fade); }
-              current_board->set_led(LED_RED, 0);
-              if (fade < 512) { delay(512-fade); } else { delay(fade-512); }
-            }
-          }
-        }
+        // int div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4 : 1);
+        //
+        // // useful for debugging, fade breaks = panda is overloaded
+        // for (int div_mode_loop = 0; div_mode_loop < div_mode; div_mode_loop++) {
+        //   for (int fade = 0; fade < 1024; fade += 8) {
+        //     for (int i = 0; i < (128/div_mode); i++) {
+        //       current_board->set_led(LED_RED, 1);
+        //       if (fade < 512) { delay(fade); } else { delay(1024-fade); }
+        //       current_board->set_led(LED_RED, 0);
+        //       if (fade < 512) { delay(512-fade); } else { delay(fade-512); }
+        //     }
+        //   }
+        // }
       #ifdef DEBUG_FAULTS
       } else {
           current_board->set_led(LED_RED, 1);
