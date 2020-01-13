@@ -32,7 +32,7 @@ void set_power_save_state(int state) {
 
     // Switch EPS/GPS
     if (enable) {
-      current_board->set_esp_gps_mode(ESP_GPS_ENABLED);
+      current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
     } else {
       current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
     }
