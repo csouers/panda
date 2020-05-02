@@ -183,8 +183,8 @@ void set_honda_alt_brake_msg(bool c){
   honda_alt_brake_msg = c;
 }
 
-void set_honda_vision_radar(bool c){
-  honda_vision_radar = c;
+void set_honda_bosch_long(bool c){
+  honda_bosch_long = c;
 }
 
 int get_honda_hw(void) {

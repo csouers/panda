@@ -334,14 +334,14 @@ class TestHondaBoschGiraffeSafety(TestHondaBoschHarnessSafety):
     self.safety.init_tests_honda()
 
 
-class TestHondaBoschVisionRadarSafety(TestHondaBoschSafety):
+class TestHondaBoschLongSafety(TestHondaBoschSafety):
   NO_GAS = -30000
   MAX_GAS = 2000
   MAX_BRAKE = -3.5
 
   @classmethod
   def setUpClass(cls):
-    if cls.__name__ == "TestHondaBoschVisionRadarSafety":
+    if cls.__name__ == "TestHondaBoschLongSafety":
       cls.packer = None
       cls.safety = None
       raise unittest.SkipTest
@@ -369,7 +369,7 @@ class TestHondaBoschVisionRadarSafety(TestHondaBoschSafety):
         send = self.MAX_BRAKE <= accel <= 0 if controls_allowed else accel == 0
         self.assertEqual(send, self._tx(self._send_gas_brake_msg(self.NO_GAS, accel)), (controls_allowed, accel))
 
-class TestHondaBoschVisionRadarHarnessSafety(TestHondaBoschVisionRadarSafety):
+class TestHondaBoschLongHarnessSafety(TestHondaBoschLongSafety):
   TX_MSGS = [[0xE4, 1], [0x1DF, 1], [0x1EF, 1], [0x1FA, 1], [0x30C, 1], [0x33D, 1], [0x39F, 1], [0x18DAB0F1, 1]]  # Bosch Harness w/ gas and brakes
   RELAY_MALFUNCTION_BUS = 0
   FWD_BLACKLISTED_ADDRS = {2: [0xE4, 0xE5, 0x33D]}
@@ -384,7 +384,7 @@ class TestHondaBoschVisionRadarHarnessSafety(TestHondaBoschVisionRadarSafety):
     self.safety.init_tests_honda()
 
 
-class TestHondaBoschVisionRadarGiraffeSafety(TestHondaBoschVisionRadarSafety):
+class TestHondaBoschLongGiraffeSafety(TestHondaBoschLongSafety):
   TX_MSGS = [[0xE4, 0], [0x1DF, 0], [0x1EF, 0], [0x1FA, 0], [0x30C, 0], [0x33D, 0], [0x39F, 0], [0x18DAB0F1, 0]]  # Bosch Giraffe w/ gas and brakes
   RELAY_MALFUNCTION_BUS = 2
   FWD_BLACKLISTED_ADDRS = {1: [0xE4, 0xE5, 0x33D]}
