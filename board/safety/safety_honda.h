@@ -229,7 +229,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int bus_pt = (honda_hw == HONDA_BH_HW)? 1 : 0;
 
   // BRAKE: safety check (nidec)
-  if ((addr == 0x1FA) && (bus == 0)) {
+  if ((addr == 0x1FA) && (bus == bus_pt)) {
     honda_brake = (GET_BYTE(to_send, 0) << 2) + ((GET_BYTE(to_send, 1) >> 6) & 0x3);
     if (!current_controls_allowed) {
       if (honda_brake != 0) {
