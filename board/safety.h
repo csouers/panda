@@ -250,7 +250,7 @@ int to_signed(int d, int bits) {
 }
 
 bool get_param_flag(int16_t param, uint16_t mask) {
-  return (param & mask) == mask;
+  return ((uint16_t)param & mask) == mask;
 }
 
 // given a new sample, update the smaple_t struct
