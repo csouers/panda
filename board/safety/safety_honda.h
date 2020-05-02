@@ -323,9 +323,9 @@ static void honda_bosch_giraffe_init(int16_t param) {
   relay_malfunction_reset();
   honda_hw = HONDA_BG_HW;
   // Checking for alternate brake override from safety parameter
-  honda_alt_brake_msg = get_param_flag(param, HONDA_PARAM_ALT_BRAKE);
+  honda_alt_brake_msg = get_int16_flag(param, HONDA_PARAM_ALT_BRAKE);
   // radar disabled so allow gas/brakes
-  honda_vision_radar = get_param_flag(param, HONDA_PARAM_VISION_RADAR);
+  honda_vision_radar = get_int16_flag(param, HONDA_PARAM_VISION_RADAR);
 }
 
 static void honda_bosch_harness_init(int16_t param) {
@@ -333,9 +333,9 @@ static void honda_bosch_harness_init(int16_t param) {
   relay_malfunction_reset();
   honda_hw = HONDA_BH_HW;
   // Checking for alternate brake override from safety parameter
-  honda_alt_brake_msg = get_param_flag(param, HONDA_PARAM_ALT_BRAKE);
+  honda_alt_brake_msg = get_int16_flag(param, HONDA_PARAM_ALT_BRAKE);
   // radar disabled so allow gas/brakes
-  honda_vision_radar = get_param_flag(param, HONDA_PARAM_VISION_RADAR);
+  honda_vision_radar = get_int16_flag(param, HONDA_PARAM_VISION_RADAR);
 }
 
 static int honda_nidec_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {

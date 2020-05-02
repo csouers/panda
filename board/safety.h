@@ -249,7 +249,7 @@ int to_signed(int d, int bits) {
   return d_signed;
 }
 
-bool get_param_flag(int16_t param, uint16_t mask) {
+bool get_int16_flag(int16_t param, uint16_t mask) {
   return ((uint16_t)param & mask) == mask;
 }
 
