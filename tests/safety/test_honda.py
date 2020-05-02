@@ -19,6 +19,8 @@ HONDA_BH_HW = 2
 
 class TestHondaSafety(common.PandaSafetyTest):
   MAX_BRAKE = 255
+  PT_BUS = None # must be set when inherited
+  STEER_BUS = None # must be set when inherited
 
   cnt_speed = 0
   cnt_gas = 0
@@ -60,6 +62,10 @@ class TestHondaSafety(common.PandaSafetyTest):
   def _send_steer_msg(self, steer):
     values = {"STEER_TORQUE": steer}
     return self.packer.make_can_msg_panda("STEERING_CONTROL", self.STEER_BUS, values)
+
+  def _send_brake_msg(self, brake):
+    # must be implemented when inherited
+    raise NotImplementedError()
 
   def test_resume_button(self):
     self.safety.set_controls_allowed(0)
@@ -156,7 +162,8 @@ class TestHondaSafety(common.PandaSafetyTest):
         # reset status
         self.safety.set_controls_allowed(0)
         self.safety.set_unsafe_mode(UNSAFE_MODE.DEFAULT)
-        self._tx(self._send_brake_msg(0))
+        if hw == HONDA_N_HW:
+          self._tx(self._send_brake_msg(0))
         self._tx(self._send_steer_msg(0))
         if pedal == 'brake':
           self._rx(self._speed_msg(0))
@@ -266,9 +273,6 @@ class TestHondaBoschSafety(TestHondaSafety):
     values = {"BRAKE_PRESSED": brake, "COUNTER": self.cnt_brake % 4}
     self.__class__.cnt_brake += 1
     return self.packer.make_can_msg_panda("BRAKE_MODULE", self.PT_BUS, values)
-
-  def _send_brake_msg(self, brake):
-    return []
 
   def test_alt_brake_rx_hook(self):
     self.safety.set_honda_alt_brake_msg(1)
