@@ -246,7 +246,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   // BRAKE/GAS: safety check (bosch)
   if ((addr == 0x1DF) && (bus == bus_pt)) {
-    int accel = (GET_BYTE(to_send, 3) << 3) + ((GET_BYTE(to_send, 4) >> 5) & 0x7);
+    int accel = (GET_BYTE(to_send, 3) << 3) | ((GET_BYTE(to_send, 4) >> 5) & 0x7);
     accel = to_signed(accel, 11);
     if (!current_controls_allowed) {
       if (accel != 0) {
@@ -323,9 +323,9 @@ static void honda_bosch_giraffe_init(int16_t param) {
   relay_malfunction_reset();
   honda_hw = HONDA_BG_HW;
   // Checking for alternate brake override from safety parameter
-  honda_alt_brake_msg = get_int16_flag(param, HONDA_PARAM_ALT_BRAKE);
+  honda_alt_brake_msg = GET_FLAG(param, HONDA_PARAM_ALT_BRAKE);
   // radar disabled so allow gas/brakes
-  honda_bosch_long = get_int16_flag(param, HONDA_PARAM_BOSCH_LONG);
+  honda_bosch_long = GET_FLAG(param, HONDA_PARAM_BOSCH_LONG);
 }
 
 static void honda_bosch_harness_init(int16_t param) {
@@ -333,9 +333,9 @@ static void honda_bosch_harness_init(int16_t param) {
   relay_malfunction_reset();
   honda_hw = HONDA_BH_HW;
   // Checking for alternate brake override from safety parameter
-  honda_alt_brake_msg = get_int16_flag(param, HONDA_PARAM_ALT_BRAKE);
+  honda_alt_brake_msg = GET_FLAG(param, HONDA_PARAM_ALT_BRAKE);
   // radar disabled so allow gas/brakes
-  honda_bosch_long = get_int16_flag(param, HONDA_PARAM_BOSCH_LONG);
+  honda_bosch_long = GET_FLAG(param, HONDA_PARAM_BOSCH_LONG);
 }
 
 static int honda_nidec_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {

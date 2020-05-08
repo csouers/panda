@@ -249,10 +249,6 @@ int to_signed(int d, int bits) {
   return d_signed;
 }
 
-bool get_int16_flag(int16_t param, uint16_t mask) {
-  return ((uint16_t)param & mask) == mask;
-}
-
 // given a new sample, update the smaple_t struct
 void update_sample(struct sample_t *sample, int sample_new) {
   int sample_size = sizeof(sample->values) / sizeof(sample->values[0]);
