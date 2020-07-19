@@ -2,8 +2,26 @@ bool powerActive = false;
 bool powerActive_last = false;
 bool lfDoorUnlocked = false;
 bool lfDoorUnlocked_last = false;
+bool lfDoorLocked = false;
+bool lfDoorLocked_last = false;
+
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
 
+void send_stop_test(CAN_FIFOMailBox_TypeDef *to_push){
+  uint8_t bus_num = 0U;
+  uint32_t msg_addr = 0x16F118F0;
+  uint8_t msg_len = 8U;
+
+  CAN_FIFOMailBox_TypeDef to_go;
+  // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequest=true
+  to_go.RIR = (msg_addr << 3) + 0x5;
+  to_go.RDTR = (to_push->RDTR & 0xFFFFFFF0) | msg_len;
+  to_go.RDLR = 0x00000020;
+  to_go.RDHR = 0x0;
+
+  can_send(&to_go, bus_num, true);
+}
+void send_stop_test(CAN_FIFOMailBox_TypeDef *to_push);
 
 static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int addr = GET_ADDR(to_push);
@@ -14,25 +32,15 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
     if (powerActive && !powerActive_last){
       // send the stop test frame if power is now on
-      uint8_t bus_num = 0U;
-      uint32_t msg_addr = 0x16F118F0;
-      uint8_t msg_len = 8U;
-
-      CAN_FIFOMailBox_TypeDef to_go;
-      // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequestbit=true
-      to_go.RIR = (msg_addr << 3) + 0x5;
-      to_go.RDTR = (to_push->RDTR & 0xFFFFFFF0) | msg_len;
-      to_go.RDLR = 0x00000020;
-      to_go.RDHR = 0x0;
-
-      can_send(&to_go, bus_num, true);
+      send_stop_test(to_push);
     }
   }
 
   // door lock status
   if (addr == 0x12F83130){
     lfDoorUnlocked = GET_BYTE(to_push, 0) & 0x08;
-    // if the door is unlocked now and it wasn't before
+    lfDoorLocked = GET_BYTE(to_push, 0) & 0x04;
+
     if (lfDoorUnlocked && !powerActive && (lfDoorUnlocked != lfDoorUnlocked_last)){
       // send the frame for DRL High
       // parking lights+drl low RDLR is 000F2530
@@ -41,7 +49,7 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       uint8_t msg_len = 8U;
 
       CAN_FIFOMailBox_TypeDef to_go;
-      // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequestbit=true
+      // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequest=true
       to_go.RIR = (msg_addr << 3) + 0x5;
       to_go.RDTR = (to_push->RDTR & 0xFFFFFFF0) | msg_len;
       to_go.RDLR = 0x000F3630;
@@ -49,9 +57,14 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
       can_send(&to_go, bus_num, true);
     }
+    if (lfDoorLocked && !lfDoorLocked_last){
+      // send the stop frame if the door is new locked
+      send_stop_test(to_push);
+    }
   }
   // be ready for next time around
   lfDoorUnlocked_last = lfDoorUnlocked;
+  lfDoorLocked_last = lfDoorLocked;
   powerActive_last = powerActive;
 
 
