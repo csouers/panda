@@ -20,7 +20,7 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
       CAN_FIFOMailBox_TypeDef to_go;
       // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequestbit=true
-      to_go.RIR = msg_addr << 3) + 0x5;
+      to_go.RIR = (msg_addr << 3) + 0x5;
       to_go.RDTR = (to_push->RDTR & 0xFFFFFFF0) | msg_len;
       to_go.RDLR = 0x00000020;
       to_go.RDHR = 0x0;
@@ -42,7 +42,7 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
       CAN_FIFOMailBox_TypeDef to_go;
       // move the id 3 bits left and then add binary 101 for extended=true, rtr=false, txrequestbit=true
-      to_go.RIR = msg_addr << 3) + 0x5;
+      to_go.RIR = (msg_addr << 3) + 0x5;
       to_go.RDTR = (to_push->RDTR & 0xFFFFFFF0) | msg_len;
       to_go.RDLR = 0x000F3630;
       to_go.RDHR = 0x0;
