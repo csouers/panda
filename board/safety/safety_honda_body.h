@@ -2,6 +2,8 @@ bool powerActive = false;
 bool powerActive_last = false;
 bool lfDoorUnlocked = false;
 bool lfDoorUnlocked_last = false;
+void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
+
 
 static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int addr = GET_ADDR(to_push);
@@ -23,7 +25,6 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       to_go.RDLR = 0x00000020;
       to_go.RDHR = 0x0;
 
-      void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
       can_send(&to_go, bus_num, true);
     }
   }
@@ -46,7 +47,6 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       to_go.RDLR = 0x000F3630;
       to_go.RDHR = 0x0;
 
-      void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
       can_send(&to_go, bus_num, true);
     }
   }
