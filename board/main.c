@@ -687,7 +687,7 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
     fan_tick();
 
     // set green LED to be controls allowed
-    current_board->set_led(LED_GREEN, controls_allowed);
+    //current_board->set_led(LED_GREEN, controls_allowed);
 
     // turn off the blue LED, turned on by CAN
     // unless we are in power saving mode
@@ -847,22 +847,23 @@ int main(void) {
       #ifdef DEBUG_FAULTS
       if(fault_status == FAULT_STATUS_NONE){
       #endif
-        uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
+        //uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
 
         // useful for debugging, fade breaks = panda is overloaded
-        for(uint32_t fade = 0U; fade < MAX_FADE; fade += div_mode){
-          current_board->set_led(LED_RED, true);
-          delay(fade >> 4);
-          current_board->set_led(LED_RED, false);
-          delay((MAX_FADE - fade) >> 4);
-        }
+        //for(uint32_t fade = 0U; fade < MAX_FADE; fade += div_mode){
+        //  current_board->set_led(LED_RED, true);
+        //  delay(fade >> 4);
+        //  current_board->set_led(LED_RED, false);
+        //  delay((MAX_FADE - fade) >> 4);
+        //}
 
-        for(uint32_t fade = MAX_FADE; fade > 0U; fade -= div_mode){
-          current_board->set_led(LED_RED, true);
-          delay(fade >> 4);
-          current_board->set_led(LED_RED, false);
-          delay((MAX_FADE - fade) >> 4);
-        }
+        //for(uint32_t fade = MAX_FADE; fade > 0U; fade -= div_mode){
+        //  current_board->set_led(LED_RED, true);
+        //  delay(fade >> 4);
+        //  current_board->set_led(LED_RED, false);
+         // delay((MAX_FADE - fade) >> 4);
+        //}
+	break;
 
       #ifdef DEBUG_FAULTS
       } else {

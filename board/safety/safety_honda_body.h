@@ -8,7 +8,7 @@ bool lfDoorLocked_last = false;
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
 
 void send_stop_test(CAN_FIFOMailBox_TypeDef *to_push){
-  uint8_t bus_num = 0U;
+  uint8_t bus_num = 1U;
   uint32_t msg_addr = 0x16F118F0;
   uint8_t msg_len = 8U;
 
@@ -44,7 +44,7 @@ static int honda_body_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     if (lfDoorUnlocked && !powerActive && (lfDoorUnlocked != lfDoorUnlocked_last)){
       // send the frame for DRL High
       // parking lights+drl low RDLR is 000F2530
-      uint8_t bus_num = 0U;
+      uint8_t bus_num = 1U;
       uint32_t msg_addr = 0x16F118F0;
       uint8_t msg_len = 8U;
 
