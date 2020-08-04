@@ -86,7 +86,7 @@ static void send_fake_message(uint32_t RIR, uint32_t RDTR,int msg_len, int msg_a
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = data_lo;
   to_send.RDHR = data_hi;
-  can_send(&to_send, bus_num, false);
+  can_send(&to_send, bus_num, true);
 }
 
 static uint32_t radar_VIN_char(int pos, int shift) {
