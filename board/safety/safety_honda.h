@@ -108,7 +108,7 @@ static int honda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
     //speed for radar
     if (addr == 0x309) {
-      actual_speed_kph = (uint16_t)(((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1)) * 0.01);
+      actual_speed_kph = (((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1)) * 0.01);
     }
 
     // state machine to enter and exit controls
