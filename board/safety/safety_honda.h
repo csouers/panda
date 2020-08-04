@@ -219,6 +219,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[1] = radarVin_b6;
       radar_VIN[2] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 1;
+      return 1;
     }
     if (id == 1) {
       radar_VIN[3] = radarVin_b1;
@@ -229,6 +230,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[8] = radarVin_b6;
       radar_VIN[9] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 2;
+      return 1;
     }
     if (id == 2) {
       radar_VIN[10] = radarVin_b1;
@@ -239,6 +241,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[15] = radarVin_b6;
       radar_VIN[16] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 4;
+      return 1;
     }
     else {
       return 0;
