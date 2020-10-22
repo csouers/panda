@@ -96,11 +96,34 @@ static void honda_body_init(int16_t param) {
 //   return bus_fwd;
 // }
 
+static int honda_body_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
+  int bus_fwd = -1;
+  int bus_powertrain = 0;  // powertrain bus (eps, adas control, etc)
+  int bus_body = 1;  // body bus
+
+  if (bus_num == bus_powertrain) {
+      int addr = GET_ADDR(to_fwd);
+      // TODO add safety checks for each message type
+      int security_msg = (addr == 0x0ef81218);
+      int ioc_msg = (addr == 0x16f118f0);
+
+      if (security_msg || ioc_msg) {
+        bus_fwd = bus_body;
+      }
+  }
+
+  if (bus_num == bus_body) {
+    bus_fwd = bus_powertrain;
+  }
+
+  return bus_fwd;
+}
+
 
 const safety_hooks honda_body_hooks = {
   .init = honda_body_init,
   .rx = honda_body_rx_hook,
   .tx = honda_body_tx_hook,
   .tx_lin = nooutput_tx_lin_hook,
-  .fwd = default_fwd_hook,
+  .fwd = honda_body_fwd_hook,
 };
