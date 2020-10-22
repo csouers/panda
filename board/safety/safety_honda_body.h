@@ -112,7 +112,7 @@ static int honda_body_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
       }
   }
 
-  if (bus_num == bus_body) {
+  else if (bus_num == bus_body) {
     bus_fwd = bus_powertrain;
   }
 
