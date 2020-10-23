@@ -1,19 +1,41 @@
+#define CAN_GATEWAY_INPUT 0x800
+#define CAN_GATEWAY_OUTPUT 0x801
+#define CAN_GATEWAY_SIZE 8
+
 static int elm327_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   int tx = 1;
   int addr = GET_ADDR(to_send);
   int len = GET_LEN(to_send);
-
-  //All ISO 15765-4 messages must be 8 bytes long
-  if (len != 8) {
-    tx = 0;
+  
+  // TODO: Replace this with the check functionality from safety_honda
+  bool is_body = (addr == 0x16f118f0) || (addr == 0x0ef81218) || (addr == CAN_GATEWAY_INPUT);
+  if (is_body) {
+    if ((len != 8) && (addr == 0x16f118f0)){ // honda bcm diag request
+      tx = 0;
+    }
+    else if ((len != 2) && (addr == 0x0ef81218)){ // 2017 honda civic hatch keyfob replay
+      tx = 0;
+    }
+    else if ((len != CAN_GATEWAY_SIZE) && (addr == CAN_GATEWAY_INPUT)){ // body harness heartbeat frame
+      tx = 0;
+    }
+    else {
+      tx = 0; // we shouldn't end up here if we did things correctly
+    }
   }
+  else {
+    //All ISO 15765-4 messages must be 8 bytes long
+    if (len != 8) {
+      tx = 0;
+    }
 
-  //Check valid 29 bit send addresses for ISO 15765-4
-  //Check valid 11 bit send addresses for ISO 15765-4
-  if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
-      ((addr & 0x1FFFFF00) != 0x700)) {
-    tx = 0;
+    //Check valid 29 bit send addresses for ISO 15765-4
+    //Check valid 11 bit send addresses for ISO 15765-4
+    if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
+        ((addr & 0x1FFFFF00) != 0x700)) {
+      tx = 0;
+    }
   }
   return tx;
 }

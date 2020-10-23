@@ -27,8 +27,13 @@ void set_power_save_state(int state) {
       }
       enable = true;
     }
-
+    // TODO: hack
+    if (true) {
+    current_board->enable_can_transceivers(true);
+    }
+    else {
     current_board->enable_can_transceivers(enable);
+    }
 
     // Switch EPS/GPS
     if (enable) {
