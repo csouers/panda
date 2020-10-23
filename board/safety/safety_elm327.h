@@ -1,19 +1,30 @@
+#define OP_STATE 0x800
+#define OTA_IN 0x1
+
 static int elm327_tx_hook(CANPacket_t *to_send) {
 
   int tx = 1;
   int addr = GET_ADDR(to_send);
   int len = GET_LEN(to_send);
 
-  //All ISO 15765-4 messages must be 8 bytes long
-  if (len != 8) {
-    tx = 0;
+  bool little_msg = (addr == 0x0ef81218);
+  if (little_msg) {
+    if ((len != 2) && (addr == 0x0ef81218)){ // 2017 honda civic hatch keyfob replay
+      tx = 0;
+    }
   }
+  //All ISO 15765-4, OTA, BCM IO Diagnostic, and OP system state messages must be 8 bytes long
+  else {
+    if (len != 8) {
+      tx = 0;
+    }
 
-  //Check valid 29 bit send addresses for ISO 15765-4
-  //Check valid 11 bit send addresses for ISO 15765-4
-  if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
-      ((addr & 0x1FFFFF00) != 0x700)) {
-    tx = 0;
+    //Check valid 29 bit send addresses for ISO 15765-4
+    //Check valid 11 bit send addresses for ISO 15765-4
+    if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
+        ((addr & 0x1FFFFF00) != 0x700)) {
+      tx = 0;
+    }
   }
   return tx;
 }
