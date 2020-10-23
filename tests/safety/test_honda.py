@@ -20,6 +20,21 @@ class Btn:
 HONDA_NIDEC = 0
 HONDA_BOSCH = 1
 
+turnSignalCmdLeftMsg = b"\x30\x0a\x0f\x00\x00\x00\x00\x00"
+turnSignalCmdRightMsg = b"\x30\x0b\x0f\x00\x00\x00\x00\x00"
+turnSignalCmdCancelMsg = b"\x20"
+trunkCmdReleaseMsg = b"\x30\x09\x01\x00\x00\x00\x00\x00"
+
+def interceptor_msg(gas, addr):
+  to_send = make_msg(0, addr, 6)
+  to_send[0].data[0] = (gas & 0xFF00) >> 8
+  to_send[0].data[1] = gas & 0xFF
+  to_send[0].data[2] = (gas & 0xFF00) >> 8
+  to_send[0].data[3] = gas & 0xFF
+  return to_send
+
+def kwp_msg(msg):
+  return ([0x16F118F0, 0, msg, 0])
 
 # Honda safety has several different configurations tested here:
 #  * Nidec
@@ -91,6 +106,19 @@ class HondaButtonEnableBase(common.PandaCarSafetyTest):
     self.assertTrue(self.safety.get_controls_allowed())
     self._rx(self._acc_state_msg(False))
     self.assertFalse(self.safety.get_controls_allowed())
+
+  # Never allow dangerous commands; e.g. trunk release
+  def test_kwp_over_can(self):
+    self.safety.set_controls_allowed(0)
+    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdCancelMsg)))
+    self.assertFalse(self._tx(self.kwp_msg(turnSignalCmdLeftMsg)))
+    self.assertFalse(self._tx(self.kwp_msg(turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(self.kwp_msg(trunkCmdReleaseMsg)))
+    self.safety.set_controls_allowed(1)
+    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdCancelMsg)))
+    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdLeftMsg)))
+    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(self.kwp_msg(trunkCmdReleaseMsg)))
 
   def test_rx_hook(self):
 

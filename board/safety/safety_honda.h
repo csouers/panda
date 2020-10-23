@@ -1,7 +1,7 @@
 const CanMsg HONDA_N_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x30C, 0, 8}, {0x33D, 0, 5}};
 const CanMsg HONDA_N_INTERCEPTOR_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}};
 const CanMsg HONDA_BOSCH_TX_MSGS[] = {{0xE4, 0, 5}, {0xE5, 0, 8}, {0x296, 1, 4}, {0x33D, 0, 5}, {0x33DA, 0, 5}, {0x33DB, 0, 8}};  // Bosch
-const CanMsg HONDA_BOSCH_LONG_TX_MSGS[] = {{0xE4, 1, 5}, {0x1DF, 1, 8}, {0x1EF, 1, 8}, {0x1FA, 1, 8}, {0x30C, 1, 8}, {0x33D, 1, 5}, {0x33DA, 1, 5}, {0x33DB, 1, 8}, {0x39F, 1, 8}, {0x18DAB0F1, 1, 8}};  // Bosch w/ gas and brakes
+const CanMsg HONDA_BOSCH_LONG_TX_MSGS[] = {{0xE4, 1, 5}, {0x1DF, 1, 8}, {0x1EF, 1, 8}, {0x1FA, 1, 8}, {0x30C, 1, 8}, {0x33D, 1, 5}, {0x33DA, 1, 5}, {0x33DB, 1, 8}, {0x39F, 1, 8}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}, {0x18DAB0F1, 1, 8}};  // Bosch w/ gas and brakes and body
 const CanMsg HONDA_RADARLESS_TX_MSGS[] = {{0xE4, 0, 5}, {0x296, 2, 4}, {0x33D, 0, 8}};  // Bosch radarless
 const CanMsg HONDA_RADARLESS_LONG_TX_MSGS[] = {{0xE4, 0, 5}, {0x33D, 0, 8}, {0x1C8, 0, 8}, {0x30C, 0, 8}};  // Bosch radarless w/ gas and brakes
 
@@ -264,7 +264,10 @@ static void honda_rx_hook(CANPacket_t *to_push) {
   if (honda_bosch_long && !honda_bosch_radarless && (bus == pt_bus) && (addr == 0x1DF)) {
     stock_ecu_detected = true;
   }
-
+  // // TODO: tick the heartbeat. If we lose contact with the OP, should we go not controls_allowed???
+  // if ((addr == 0x801) && (len == 8)) {
+  //
+  // }
   generic_rx_checks(stock_ecu_detected);
 
 }
@@ -359,6 +362,28 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
   if ((addr == 0x296) && !controls_allowed && (bus == bus_buttons)) {
     if (((GET_BYTE(to_send, 0) >> 5) & 0x7U) != 2U) {
       tx = false;
+    }
+  }
+  // TODO: gateway packet
+  // if (addr == 0x800) {
+  //
+  // }
+
+  // KWP over CAN. Allow only short turn signal request and cancel
+  // TODO: move to gateway firmware
+  if (addr == 0x16F118F0){
+
+    bool signalCmd = ((GET_LEN(to_send) == 8) && ((GET_BYTES(to_send, 0, 4) == 0x000F0A30) || (GET_BYTES(to_send, 0, 4) == 0x000F0B30)) && (GET_BYTES(to_send, 4, 4) == 0x0));
+    bool cancelCmd = ((GET_LEN(to_send) == 1) && (GET_BYTE(to_send, 0) == 0x20));
+
+    // always allow cancel
+    if (!cancelCmd) {
+      if (!controls_allowed) {
+        tx = 0;
+      }
+      if (controls_allowed && !signalCmd){
+        tx = 0;
+      }
     }
   }
 

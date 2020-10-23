@@ -1,18 +1,46 @@
+#define CAN_GATEWAY_INPUT 0x800
+#define CAN_GATEWAY_OUTPUT 0x801
+#define CAN_GATEWAY_SIZE 8
+#define OTA_IN 0x1
+
 static bool elm327_tx_hook(CANPacket_t *to_send) {
   bool tx = true;
   int addr = GET_ADDR(to_send);
   int len = GET_LEN(to_send);
 
   // All ISO 15765-4 messages must be 8 bytes long
-  if (len != 8) {
-    tx = false;
+    // TODO: Replace this with the check functionality from safety_honda
+  bool is_body = (addr == 0x16f118f0) || (addr == 0x0ef81218) || (addr == CAN_GATEWAY_INPUT);
+  if (is_body) {
+    if ((len != 8) && (addr == 0x16f118f0)){ // honda bcm diag request
+      tx = false;
+    }
+    else if ((len != 2) && (addr == 0x0ef81218)){ // 2017 honda civic hatch keyfob replay
+      tx = false;
+    }
+    else if ((len != CAN_GATEWAY_SIZE) && (addr == CAN_GATEWAY_INPUT)){ // body harness heartbeat frame
+      tx = false;
+    }
+    else {
+      tx = false; // we shouldn't end up here if we did things correctly
+    }
   }
+  // // allow OTA flashing
+  // else if (addr == OTA_IN){
+  //   tx = true;
+  // }
+  else {
+    //All ISO 15765-4 messages must be 8 bytes long
+    if (len != 8) {
+      tx = false;
+    }
 
   // Check valid 29 bit send addresses for ISO 15765-4
   // Check valid 11 bit send addresses for ISO 15765-4
   if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
       ((addr & 0x1FFFFF00) != 0x600) && ((addr & 0x1FFFFF00) != 0x700)) {
     tx = false;
+  }
   }
   return tx;
 }
