@@ -268,7 +268,7 @@ void CAN1_SCE_IRQ_Handler(void) {
 #endif
 
 void soft_flasher_start(void) {
-  #ifdef PEDAL
+  #if defined PEDAL || defined GATEWAY
     REGISTER_INTERRUPT(CAN1_TX_IRQn, CAN1_TX_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
     REGISTER_INTERRUPT(CAN1_RX0_IRQn, CAN1_RX0_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
     REGISTER_INTERRUPT(CAN1_SCE_IRQn, CAN1_SCE_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
@@ -283,8 +283,8 @@ void soft_flasher_start(void) {
   RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-// pedal has the canloader
-#ifdef PEDAL
+// pedal and gateway have the canloader
+#if defined PEDAL || defined GATEWAY
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 
   // B8,B9: CAN 1
@@ -340,4 +340,3 @@ void soft_flasher_start(void) {
     delay(500000);
   }
 }
-
