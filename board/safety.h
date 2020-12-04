@@ -3,7 +3,6 @@
 // Include the actual safety policies.
 #include "safety/safety_defaults.h"
 #include "safety/safety_honda.h"
-#include "safety/safety_honda_body.h"
 #include "safety/safety_toyota.h"
 #include "safety/safety_tesla.h"
 #include "safety/safety_gm_ascm.h"
@@ -16,6 +15,9 @@
 #include "safety/safety_nissan.h"
 #include "safety/safety_volkswagen.h"
 #include "safety/safety_elm327.h"
+
+// body harness
+#include "safety/safety_honda_body.h"
 
 // from cereal.car.CarParams.SafetyModel
 #define SAFETY_SILENT 0U
@@ -39,7 +41,9 @@
 #define SAFETY_VOLKSWAGEN_PQ 21U
 #define SAFETY_SUBARU_LEGACY 22U
 #define SAFETY_HYUNDAI_LEGACY 23U
-#define SAFETY_HONDA_BODY 24U
+
+// body harness
+#define SAFETY_HONDA_BODY 100U
 
 uint16_t current_safety_mode = SAFETY_SILENT;
 const safety_hooks *current_hooks = &nooutput_hooks;
@@ -243,7 +247,6 @@ const safety_hook_config safety_hook_registry[] = {
   {SAFETY_GM, &gm_hooks},
   {SAFETY_HONDA_BOSCH_GIRAFFE, &honda_bosch_giraffe_hooks},
   {SAFETY_HONDA_BOSCH_HARNESS, &honda_bosch_harness_hooks},
-  {SAFETY_HONDA_BODY, &honda_body_hooks},
   {SAFETY_HYUNDAI, &hyundai_hooks},
   {SAFETY_CHRYSLER, &chrysler_hooks},
   {SAFETY_SUBARU, &subaru_hooks},
@@ -259,6 +262,9 @@ const safety_hook_config safety_hook_registry[] = {
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_GM_ASCM, &gm_ascm_hooks},
   {SAFETY_FORD, &ford_hooks},
+#endif
+#ifdef GATEWAY
+  {SAFETY_HONDA_BODY, &honda_body_hooks},
 #endif
 };
 
