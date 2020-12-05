@@ -44,7 +44,7 @@ class CanHandle(object):
     return self.transact(dat)
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description='Flash pedal over can')
+  parser = argparse.ArgumentParser(description='Flash gateway over can')
   parser.add_argument('--recover', action='store_true')
   parser.add_argument("fn", type=str, nargs='?', help="flash file")
   args = parser.parse_args()
