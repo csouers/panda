@@ -866,7 +866,6 @@ int main(void) {
            delay((MAX_FADE - fade) >> 4);
           }
         #endif
-	break;
 
       #ifdef DEBUG_FAULTS
       } else {
