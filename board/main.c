@@ -851,7 +851,7 @@ int main(void) {
         //uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
 
         // useful for debugging, fade breaks = panda is overloaded
-        #ifndef GATEWAY
+        #ifdef GATEWAY
           for(uint32_t fade = 0U; fade < MAX_FADE; fade += div_mode){
            current_board->set_led(LED_RED, true);
            delay(fade >> 4);
