@@ -15,12 +15,12 @@ def sec_since_boot():
 
 def can_printer():
   p = Panda()
-  p.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
+  p.set_safety_mode(24)
 
   start = sec_since_boot()
   lp = sec_since_boot()
   msgs = defaultdict(list)
-  canbus = int(os.getenv("CAN", "0"))
+  canbus = int(os.getenv("CAN", "1"))
   while True:
     can_recv = p.can_recv()
     for address, _, dat, src in can_recv:

@@ -816,7 +816,7 @@ int main(void) {
   TIM2->EGR = TIM_EGR_UG;
   // use TIM2->CNT to read
 
-  // init to SILENT and can silent
+  // init to HONDA BODY and can live
   set_safety_mode(SAFETY_HONDA_BODY, 0);
 
   // enable CAN TXs
