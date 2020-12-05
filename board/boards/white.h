@@ -317,7 +317,7 @@ void white_init(void) {
   white_grey_common_init();
 
   // Set default state of ESP
-  #if defined(EON) || defined(GATEWAY)
+  #if (defined EON) || (defined GATEWAY)
     current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
   #else
     current_board->set_esp_gps_mode(ESP_GPS_ENABLED);
