@@ -151,7 +151,7 @@ int spi_cb_rx(uint8_t *data, int len, uint8_t *data_out) {
   return resp_len;
 }
 
-#ifdef PEDAL
+#if defined(PEDAL) || defined(GATEWAY)
 
 #include "drivers/llcan.h"
 #define CAN CAN1
@@ -288,8 +288,13 @@ void soft_flasher_start(void) {
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 
   // B8,B9: CAN 1
-  set_gpio_alternate(GPIOB, 8, GPIO_AF9_CAN1);
-  set_gpio_alternate(GPIOB, 9, GPIO_AF9_CAN1);
+  #ifdef STM32F4
+    set_gpio_alternate(GPIOB, 8, GPIO_AF8_CAN1);
+    set_gpio_alternate(GPIOB, 9, GPIO_AF8_CAN1);
+  #else
+    set_gpio_alternate(GPIOB, 8, GPIO_AF9_CAN1);
+    set_gpio_alternate(GPIOB, 9, GPIO_AF9_CAN1);
+  #endif
   current_board->enable_can_transciever(1, true);
 
   // init can
