@@ -61,12 +61,7 @@ struct __attribute__((packed)) health_t {
   uint8_t fault_status_pkt;
   uint8_t power_save_enabled_pkt;
 };
-// ******************** Body *************** //
-#ifdef GATEWAY
-  #define CAN_GATEWAY_INPUT 0x800
-  #define CAN_GATEWAY_OUTPUT 0x801
-  #define CAN_GATEWAY_SIZE 8
-#endif
+
 // ********************* Serial debugging *********************
 
 bool check_started(void) {
