@@ -373,6 +373,12 @@ void ignition_can_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
   }
 }
+// ******************** Body *************** //
+#ifdef GATEWAY
+  #define CAN_GATEWAY_INPUT 0x800
+  #define CAN_GATEWAY_OUTPUT 0x801
+  #define CAN_GATEWAY_SIZE 8
+#endif
 
 // CAN receive handlers
 // blink blue when we are receiving CAN messages
@@ -392,6 +398,23 @@ void can_rx(uint8_t can_number) {
     to_push.RDLR = CAN->sFIFOMailBox[0].RDLR;
     to_push.RDHR = CAN->sFIFOMailBox[0].RDHR;
 
+    if (bus_number == 0){
+      int address = GET_ADDR(&to_push);
+      if (address == CAN_GATEWAY_INPUT){
+        // softloader entry
+        if (GET_BYTES_04(&to_push) == 0xdeadface) {
+          if (GET_BYTES_48(&to_push) == 0x0ab00b1e) {
+            enter_bootloader_mode = ENTER_SOFTLOADER_MAGIC;
+            NVIC_SystemReset();
+          // } else if (GET_BYTES_48(&to_push) == 0x02b00b1e) {
+          //   enter_bootloader_mode = ENTER_BOOTLOADER_MAGIC;
+          //   NVIC_SystemReset();
+          } else {
+            puts("Failed entering Softloader or Bootloader\n");
+          }
+        }
+      }
+    }
     // modify RDTR for our API
     to_push.RDTR = (to_push.RDTR & 0xFFFF000F) | (bus_number << 4);
 

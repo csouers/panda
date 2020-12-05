@@ -8,7 +8,12 @@ void grey_init(void) {
   white_grey_common_init();
 
   // Set default state of GPS
+#ifdef GATEWAY
+// no GPS on gateway pandas
+  current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
+#else
   current_board->set_esp_gps_mode(ESP_GPS_ENABLED);
+#endif
 }
 
 void grey_set_esp_gps_mode(uint8_t mode) {
@@ -18,6 +23,7 @@ void grey_set_esp_gps_mode(uint8_t mode) {
       set_gpio_output(GPIOC, 14, 0);
       set_gpio_output(GPIOC, 5, 0);
       break;
+#ifndef GATEWAY
     case ESP_GPS_ENABLED:
       // GPS ON
       set_gpio_output(GPIOC, 14, 1);
@@ -27,6 +33,7 @@ void grey_set_esp_gps_mode(uint8_t mode) {
       set_gpio_output(GPIOC, 14, 1);
       set_gpio_output(GPIOC, 5, 0);
       break;
+#endif
     default:
       puts("Invalid ESP/GPS mode\n");
       break;

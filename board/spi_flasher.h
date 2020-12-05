@@ -151,7 +151,7 @@ int spi_cb_rx(uint8_t *data, int len, uint8_t *data_out) {
   return resp_len;
 }
 
-#ifdef PEDAL
+#if defined(PEDAL) || defined(GATEWAY)
 
 #include "drivers/llcan.h"
 #define CAN CAN1
@@ -268,7 +268,7 @@ void CAN1_SCE_IRQ_Handler(void) {
 #endif
 
 void soft_flasher_start(void) {
-  #ifdef PEDAL
+  #if defined PEDAL || defined GATEWAY
     REGISTER_INTERRUPT(CAN1_TX_IRQn, CAN1_TX_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
     REGISTER_INTERRUPT(CAN1_RX0_IRQn, CAN1_RX0_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
     REGISTER_INTERRUPT(CAN1_SCE_IRQn, CAN1_SCE_IRQ_Handler, CAN_INTERRUPT_RATE, FAULT_INTERRUPT_RATE_CAN_1)
@@ -283,13 +283,18 @@ void soft_flasher_start(void) {
   RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-// pedal has the canloader
-#ifdef PEDAL
+// pedal and gateway have the canloader
+#if defined PEDAL || defined GATEWAY
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 
   // B8,B9: CAN 1
-  set_gpio_alternate(GPIOB, 8, GPIO_AF9_CAN1);
-  set_gpio_alternate(GPIOB, 9, GPIO_AF9_CAN1);
+  #ifdef STM32F4
+    set_gpio_alternate(GPIOB, 8, GPIO_AF8_CAN1);
+    set_gpio_alternate(GPIOB, 9, GPIO_AF8_CAN1);
+  #else
+    set_gpio_alternate(GPIOB, 8, GPIO_AF9_CAN1);
+    set_gpio_alternate(GPIOB, 9, GPIO_AF9_CAN1);
+  #endif
   current_board->enable_can_transciever(1, true);
 
   // init can
@@ -340,4 +345,3 @@ void soft_flasher_start(void) {
     delay(500000);
   }
 }
-

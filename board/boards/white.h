@@ -78,7 +78,7 @@ void white_set_esp_gps_mode(uint8_t mode) {
       set_gpio_output(GPIOC, 14, 0);
       set_gpio_output(GPIOC, 5, 0);
       break;
-#ifndef EON
+#if !defined(EON) || !defined(GATEWAY)
     case ESP_GPS_ENABLED:
       // ESP ON
       set_gpio_output(GPIOC, 14, 1);
@@ -317,10 +317,10 @@ void white_init(void) {
   white_grey_common_init();
 
   // Set default state of ESP
-  #ifdef EON
+  #if defined(EON) || defined(GATEWAY)
     current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
   #else
-    current_board->set_esp_gps_mode(ESP_GPS_DISABLED);
+    current_board->set_esp_gps_mode(ESP_GPS_ENABLED);
   #endif
 }
 
