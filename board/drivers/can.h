@@ -398,7 +398,7 @@ void can_rx(uint8_t can_number) {
     to_push.RDLR = CAN->sFIFOMailBox[0].RDLR;
     to_push.RDHR = CAN->sFIFOMailBox[0].RDHR;
 
-    if (bus_number == 0){
+    if (bus_number == 0U){
       int address = GET_ADDR(&to_push);
       if (address == CAN_GATEWAY_INPUT){
         // softloader entry
