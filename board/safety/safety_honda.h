@@ -1,4 +1,5 @@
 #include "safety_teslaradar.h"
+#define TESLA_DEBUG
 
 // board enforces
 //   in-state
@@ -198,9 +199,9 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
   int bus = GET_BUS(to_send);
 
-  //check if this is a teslaradar vin message
-  //capture message for radarVIN and settings
-  // tx = 1 is only for debug
+  // check if this is a teslaradar vin message
+  // capture message for radarVIN and settings
+  // tx = 1 is only for debug. see TESLA_DEBUG at top
   if (addr == 0x560) {
     int id = (to_send->RDLR & 0xFF);
     int radarVin_b1 = ((to_send->RDLR >> 8) & 0xFF);
@@ -220,7 +221,9 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[1] = radarVin_b6;
       radar_VIN[2] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 1;
+      #ifdef TESLA_DEBUG
       tx = 1;
+      #endif
     }
     if (id == 1) {
       radar_VIN[3] = radarVin_b1;
@@ -231,7 +234,9 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[8] = radarVin_b6;
       radar_VIN[9] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 2;
+      #ifdef TESLA_DEBUG
       tx = 1;
+      #endif
     }
     if (id == 2) {
       radar_VIN[10] = radarVin_b1;
@@ -242,7 +247,9 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[15] = radarVin_b6;
       radar_VIN[16] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 4;
+      #ifdef TESLA_DEBUG
       tx = 1;
+      #endif
     }
   }
   else {
