@@ -200,6 +200,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   //check if this is a teslaradar vin message
   //capture message for radarVIN and settings
+  // tx = 1 is only for debug
   if (addr == 0x560) {
     int id = (to_send->RDLR & 0xFF);
     int radarVin_b1 = ((to_send->RDLR >> 8) & 0xFF);
@@ -219,7 +220,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[1] = radarVin_b6;
       radar_VIN[2] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 1;
-      return 1;
+      tx = 1;
     }
     if (id == 1) {
       radar_VIN[3] = radarVin_b1;
@@ -230,7 +231,7 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[8] = radarVin_b6;
       radar_VIN[9] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 2;
-      return 1;
+      tx = 1;
     }
     if (id == 2) {
       radar_VIN[10] = radarVin_b1;
@@ -241,112 +242,111 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[15] = radarVin_b6;
       radar_VIN[16] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 4;
-      return 1;
-    }
-    else {
-      return 0;
+      tx = 1;
     }
   }
+  else {
 
-  if ((honda_hw == HONDA_BG_HW) && !honda_bosch_long) {
-    tx = msg_allowed(to_send, HONDA_BG_TX_MSGS, sizeof(HONDA_BG_TX_MSGS)/sizeof(HONDA_BG_TX_MSGS[0]));
-  } else if ((honda_hw == HONDA_BG_HW) && honda_bosch_long) {
-    tx = msg_allowed(to_send, HONDA_BG_LONG_TX_MSGS, sizeof(HONDA_BG_LONG_TX_MSGS)/sizeof(HONDA_BG_LONG_TX_MSGS[0]));
-  } else if ((honda_hw == HONDA_BH_HW) && !honda_bosch_long) {
-    tx = msg_allowed(to_send, HONDA_BH_TX_MSGS, sizeof(HONDA_BH_TX_MSGS)/sizeof(HONDA_BH_TX_MSGS[0]));
-  } else if ((honda_hw == HONDA_BH_HW) && honda_bosch_long) {
-    tx = msg_allowed(to_send, HONDA_BH_LONG_TX_MSGS, sizeof(HONDA_BH_LONG_TX_MSGS)/sizeof(HONDA_BH_LONG_TX_MSGS[0]));
-  } else {
-    tx = msg_allowed(to_send, HONDA_N_TX_MSGS, sizeof(HONDA_N_TX_MSGS)/sizeof(HONDA_N_TX_MSGS[0]));
-  }
+    if ((honda_hw == HONDA_BG_HW) && !honda_bosch_long) {
+      tx = msg_allowed(to_send, HONDA_BG_TX_MSGS, sizeof(HONDA_BG_TX_MSGS)/sizeof(HONDA_BG_TX_MSGS[0]));
+    } else if ((honda_hw == HONDA_BG_HW) && honda_bosch_long) {
+      tx = msg_allowed(to_send, HONDA_BG_LONG_TX_MSGS, sizeof(HONDA_BG_LONG_TX_MSGS)/sizeof(HONDA_BG_LONG_TX_MSGS[0]));
+    } else if ((honda_hw == HONDA_BH_HW) && !honda_bosch_long) {
+      tx = msg_allowed(to_send, HONDA_BH_TX_MSGS, sizeof(HONDA_BH_TX_MSGS)/sizeof(HONDA_BH_TX_MSGS[0]));
+    } else if ((honda_hw == HONDA_BH_HW) && honda_bosch_long) {
+      tx = msg_allowed(to_send, HONDA_BH_LONG_TX_MSGS, sizeof(HONDA_BH_LONG_TX_MSGS)/sizeof(HONDA_BH_LONG_TX_MSGS[0]));
+    } else {
+      tx = msg_allowed(to_send, HONDA_N_TX_MSGS, sizeof(HONDA_N_TX_MSGS)/sizeof(HONDA_N_TX_MSGS[0]));
+    }
 
-  if (relay_malfunction) {
-    tx = 0;
-  }
+    if (relay_malfunction) {
+      tx = 0;
+    }
 
-  // disallow actuator commands if gas or brake (with vehicle moving) are pressed
-  // and the the latching controls_allowed flag is True
-  int pedal_pressed = brake_pressed_prev && vehicle_moving;
-  bool unsafe_allow_gas = unsafe_mode & UNSAFE_DISABLE_DISENGAGE_ON_GAS;
-  if (!unsafe_allow_gas) {
-    pedal_pressed = pedal_pressed || gas_pressed_prev || (gas_interceptor_prev > HONDA_GAS_INTERCEPTOR_THRESHOLD);
-  }
-  bool current_controls_allowed = controls_allowed && !(pedal_pressed);
-  int bus_pt = (honda_hw == HONDA_BH_HW)? 1 : 0;
+    // disallow actuator commands if gas or brake (with vehicle moving) are pressed
+    // and the the latching controls_allowed flag is True
+    int pedal_pressed = brake_pressed_prev && vehicle_moving;
+    bool unsafe_allow_gas = unsafe_mode & UNSAFE_DISABLE_DISENGAGE_ON_GAS;
+    if (!unsafe_allow_gas) {
+      pedal_pressed = pedal_pressed || gas_pressed_prev || (gas_interceptor_prev > HONDA_GAS_INTERCEPTOR_THRESHOLD);
+    }
+    bool current_controls_allowed = controls_allowed && !(pedal_pressed);
+    int bus_pt = (honda_hw == HONDA_BH_HW)? 1 : 0;
 
-  // BRAKE: safety check (nidec)
-  if ((addr == 0x1FA) && (bus == bus_pt)) {
-    honda_brake = (GET_BYTE(to_send, 0) << 2) + ((GET_BYTE(to_send, 1) >> 6) & 0x3);
-    if (!current_controls_allowed) {
-      if (honda_brake != 0) {
+    // BRAKE: safety check (nidec)
+    if ((addr == 0x1FA) && (bus == bus_pt)) {
+      honda_brake = (GET_BYTE(to_send, 0) << 2) + ((GET_BYTE(to_send, 1) >> 6) & 0x3);
+      if (!current_controls_allowed) {
+        if (honda_brake != 0) {
+          tx = 0;
+        }
+      }
+      if (honda_brake > 255) {
+        tx = 0;
+      }
+      if (honda_fwd_brake) {
         tx = 0;
       }
     }
-    if (honda_brake > 255) {
-      tx = 0;
-    }
-    if (honda_fwd_brake) {
-      tx = 0;
-    }
-  }
 
-  // BRAKE/GAS: safety check (bosch)
-  if ((addr == 0x1DF) && (bus == bus_pt)) {
-    int accel = (GET_BYTE(to_send, 3) << 3) | ((GET_BYTE(to_send, 4) >> 5) & 0x7);
-    accel = to_signed(accel, 11);
-    if (!current_controls_allowed) {
-      if (accel != 0) {
+    // BRAKE/GAS: safety check (bosch)
+    if ((addr == 0x1DF) && (bus == bus_pt)) {
+      int accel = (GET_BYTE(to_send, 3) << 3) | ((GET_BYTE(to_send, 4) >> 5) & 0x7);
+      accel = to_signed(accel, 11);
+      if (!current_controls_allowed) {
+        if (accel != 0) {
+          tx = 0;
+        }
+      }
+      if (accel < HONDA_BOSCH_ACCEL_MIN) {
+        tx = 0;
+      }
+
+      int gas = (GET_BYTE(to_send, 0) << 8) | GET_BYTE(to_send, 1);
+      gas = to_signed(gas, 16);
+      if (!current_controls_allowed) {
+        if (gas != HONDA_BOSCH_NO_GAS_VALUE) {
+          tx = 0;
+        }
+      }
+      if (gas > HONDA_BOSCH_GAS_MAX) {
         tx = 0;
       }
     }
-    if (accel < HONDA_BOSCH_ACCEL_MIN) {
-      tx = 0;
+
+    // STEER: safety check
+    if ((addr == 0xE4) || (addr == 0x194)) {
+      if (!current_controls_allowed) {
+        bool steer_applied = GET_BYTE(to_send, 0) | GET_BYTE(to_send, 1);
+        if (steer_applied) {
+          tx = 0;
+        }
+      }
     }
 
-    int gas = (GET_BYTE(to_send, 0) << 8) | GET_BYTE(to_send, 1);
-    gas = to_signed(gas, 16);
-    if (!current_controls_allowed) {
-      if (gas != HONDA_BOSCH_NO_GAS_VALUE) {
+      // Bosch supplemental control check
+    if (addr == 0xE5) {
+      if ((GET_BYTES_04(to_send) != 0x10800004) || ((GET_BYTES_48(to_send) & 0x00FFFFFF) != 0x0)) {
         tx = 0;
       }
     }
-    if (gas > HONDA_BOSCH_GAS_MAX) {
-      tx = 0;
-    }
-  }
 
-  // STEER: safety check
-  if ((addr == 0xE4) || (addr == 0x194)) {
-    if (!current_controls_allowed) {
-      bool steer_applied = GET_BYTE(to_send, 0) | GET_BYTE(to_send, 1);
-      if (steer_applied) {
-        tx = 0;
+    // GAS: safety check (interceptor)
+    if (addr == 0x200) {
+      if (!current_controls_allowed) {
+        if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
+          tx = 0;
+        }
       }
     }
-  }
 
-    // Bosch supplemental control check
-  if (addr == 0xE5) {
-    if ((GET_BYTES_04(to_send) != 0x10800004) || ((GET_BYTES_48(to_send) & 0x00FFFFFF) != 0x0)) {
-      tx = 0;
-    }
-  }
-
-  // GAS: safety check (interceptor)
-  if (addr == 0x200) {
-    if (!current_controls_allowed) {
-      if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
+    // FORCE CANCEL: safety check only relevant when spamming the cancel button in Bosch HW
+    // ensuring that only the cancel button press is sent (VAL 2) when controls are off.
+    // This avoids unintended engagements while still allowing resume spam
+    if ((addr == 0x296) && !current_controls_allowed && (bus == bus_pt)) {
+      if (((GET_BYTE(to_send, 0) >> 5) & 0x7) != 2) {
         tx = 0;
       }
-    }
-  }
-
-  // FORCE CANCEL: safety check only relevant when spamming the cancel button in Bosch HW
-  // ensuring that only the cancel button press is sent (VAL 2) when controls are off.
-  // This avoids unintended engagements while still allowing resume spam
-  if ((addr == 0x296) && !current_controls_allowed && (bus == bus_pt)) {
-    if (((GET_BYTE(to_send, 0) >> 5) & 0x7) != 2) {
-      tx = 0;
     }
   }
 
