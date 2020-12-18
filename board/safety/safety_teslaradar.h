@@ -254,12 +254,12 @@ static void teslaradar_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     uint32_t ts_elapsed = get_ts_elapsed(ts, tesla_last_radar_signal);
     if (tesla_radar_status == 1) {
       tesla_radar_status = 2;
-      puts("Tesla Radar Active! \n");
+      // puts("Tesla Radar Active! \n");
       tesla_last_radar_signal = ts;
     } else
     if ((ts_elapsed > TESLA_RADAR_TIMEOUT) && (tesla_radar_status > 0)) {
       tesla_radar_status = 0;
-      puts("Tesla Radar Inactive! (timeout 1) \n");
+      // puts("Tesla Radar Inactive! (timeout 1) \n");
     } else
     if ((ts_elapsed <= TESLA_RADAR_TIMEOUT) && (tesla_radar_status == 2)) {
       tesla_last_radar_signal = ts;
@@ -274,11 +274,11 @@ static void teslaradar_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     if (tesla_radar_status == 0) {
       tesla_radar_status = 1;
       tesla_last_radar_signal = ts;
-      puts("Tesla Radar Initializing... \n");
+      // puts("Tesla Radar Initializing... \n");
     } else
     if ((ts_elapsed > TESLA_RADAR_TIMEOUT) && (tesla_radar_status > 0)) {
       tesla_radar_status = 0;
-      puts("Tesla Radar Inactive! (timeout 2) \n");
+      // puts("Tesla Radar Inactive! (timeout 2) \n");
     } else
     if ((ts_elapsed <= TESLA_RADAR_TIMEOUT) && (tesla_radar_status > 0)) {
       tesla_last_radar_signal = ts;
