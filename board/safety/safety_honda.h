@@ -1,5 +1,4 @@
 #include "safety_teslaradar.h"
-#define TESLA_DEBUG
 
 // board enforces
 //   in-state
@@ -221,9 +220,6 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[1] = radarVin_b6;
       radar_VIN[2] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 1;
-      #ifdef TESLA_DEBUG
-      tx = 1;
-      #endif
     }
     if (id == 1) {
       radar_VIN[3] = radarVin_b1;
@@ -234,9 +230,6 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[8] = radarVin_b6;
       radar_VIN[9] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 2;
-      #ifdef TESLA_DEBUG
-      tx = 1;
-      #endif
     }
     if (id == 2) {
       radar_VIN[10] = radarVin_b1;
@@ -247,9 +240,6 @@ static int honda_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       radar_VIN[15] = radarVin_b6;
       radar_VIN[16] = radarVin_b7;
       tesla_radar_vin_complete = tesla_radar_vin_complete | 4;
-      #ifdef TESLA_DEBUG
-      tx = 1;
-      #endif
     }
   }
   else {
@@ -418,7 +408,7 @@ static int honda_nidec_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
 
 static int honda_bosch_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   int bus_fwd = -1;
-  
+
   // don't forward if we're using tesla radar
   if (tesla_radar_should_send == 0) {
     int bus_rdr_cam = (honda_hw == HONDA_BH_HW) ? 2 : 1;  // radar bus, camera side
