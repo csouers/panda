@@ -172,10 +172,10 @@ static int honda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
     generic_rx_checks(stock_ecu_detected);
     
-    // TODO: tick the heartbeat. If we lose contact with the OP, should we go not controls_allowed???
-    if ((addr == 0x801) && (len == 8)) {
-      continue;
-    }
+    // // TODO: tick the heartbeat. If we lose contact with the OP, should we go not controls_allowed???
+    // if ((addr == 0x801) && (len == 8)) {
+    //
+    // }
   }
   return valid;
 }
