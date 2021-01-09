@@ -174,7 +174,7 @@ static int honda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     
     // TODO: tick the heartbeat. If we lose contact with the OP, should we go not controls_allowed???
     if ((addr == 0x801) && (len == 8)) {
-      break;
+      continue;
     }
   }
   return valid;
