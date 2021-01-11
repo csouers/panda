@@ -692,6 +692,7 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
 
     // turn off the blue LED, turned on by CAN
     // unless we are in power saving mode
+    // disable during bench testing
     current_board->set_led(LED_BLUE, (uptime_cnt & 1U) && (power_save_status == POWER_SAVE_STATUS_ENABLED));
 
     // increase heartbeat counter and cap it at the uint32 limit
@@ -848,10 +849,10 @@ int main(void) {
       #ifdef DEBUG_FAULTS
       if(fault_status == FAULT_STATUS_NONE){
       #endif
+      #ifndef GATEWAY
         uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
 
         // useful for debugging, fade breaks = panda is overloaded
-        #ifdef GATEWAY
           for(uint32_t fade = 0U; fade < MAX_FADE; fade += div_mode){
            current_board->set_led(LED_RED, true);
            delay(fade >> 4);
@@ -865,8 +866,7 @@ int main(void) {
            current_board->set_led(LED_RED, false);
            delay((MAX_FADE - fade) >> 4);
           }
-        #endif
-
+      #endif
       #ifdef DEBUG_FAULTS
       } else {
           current_board->set_led(LED_RED, 1);

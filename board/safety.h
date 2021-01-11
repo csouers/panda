@@ -18,6 +18,8 @@
 
 // body harness
 #include "safety/safety_honda_body.h"
+#include "safety/safety_honda_body_test.h"
+
 
 // from cereal.car.CarParams.SafetyModel
 #define SAFETY_SILENT 0U
@@ -44,6 +46,7 @@
 
 // body harness
 #define SAFETY_HONDA_BODY 100U
+#define SAFETY_HONDA_BODY_TEST 101U
 
 uint16_t current_safety_mode = SAFETY_SILENT;
 const safety_hooks *current_hooks = &nooutput_hooks;
@@ -265,6 +268,7 @@ const safety_hook_config safety_hook_registry[] = {
 #endif
 #ifdef GATEWAY
   {SAFETY_HONDA_BODY, &honda_body_hooks},
+  {SAFETY_HONDA_BODY_TEST, &honda_body_test_hooks},
 #endif
 };
 
