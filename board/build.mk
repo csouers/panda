@@ -5,14 +5,15 @@ CFLAGS += -Tstm32_flash.ld
 DFU_UTIL = "dfu-util"
 
 # Compile fast charge (DCP) only not on EON
-ifeq (,$(wildcard /EON))
+# comments below are for flashing from EON
+#ifeq (,$(wildcard /EON))
   BUILDER = DEV
 	CFLAGS += "-DGATEWAY"
-else
-  CFLAGS += "-DEON"
-  BUILDER = EON
-  DFU_UTIL = "tools/dfu-util-aarch64"
-endif
+#else
+#  CFLAGS += "-DEON"
+#  BUILDER = EON
+#  DFU_UTIL = "tools/dfu-util-aarch64"
+#endif
 
 #COMPILER_PATH = /home/batman/Downloads/gcc-arm-none-eabi-9-2020-q2-update/bin/
 CC = $(COMPILER_PATH)arm-none-eabi-gcc
@@ -41,6 +42,9 @@ ota: obj/$(PROJ_NAME).bin
 	curl http://192.168.0.10/stupdate --upload-file $<
 
 bin: obj/$(PROJ_NAME).bin
+
+gateway_ota: obj/$(PROJ_NAME).bin
+	  PYTHONPATH=../../ python3 ../tests/harness/enter_canloader_gateway.py obj/$(PROJ_NAME).bin
 
 # this flashes everything
 recover: obj/bootstub.$(PROJ_NAME).bin obj/$(PROJ_NAME).bin
