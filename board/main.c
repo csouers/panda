@@ -846,13 +846,12 @@ int main(void) {
 
   for (cnt=0;;cnt++) {
     if (power_save_status == POWER_SAVE_STATUS_DISABLED) {
-      #ifdef DEBUG_FAULTS
       if(fault_status == FAULT_STATUS_NONE){
-      #endif
-      #ifndef GATEWAY
-        uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
+        // stop flashing after 10 seconds of uptime
+        if (uptime_cnt < 10){
+          uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
 
-        // useful for debugging, fade breaks = panda is overloaded
+          // useful for debugging, fade breaks = panda is overloaded
           for(uint32_t fade = 0U; fade < MAX_FADE; fade += div_mode){
            current_board->set_led(LED_RED, true);
            delay(fade >> 4);
@@ -866,15 +865,19 @@ int main(void) {
            current_board->set_led(LED_RED, false);
            delay((MAX_FADE - fade) >> 4);
           }
-      #endif
-      #ifdef DEBUG_FAULTS
+        }
+        // make sure the led gets turned off
+        else {
+          if ((uptime_cnt > 10) && (uptime_cnt < 12)){
+            current_board->set_led(LED_RED, false);
+          }
+        }
       } else {
           current_board->set_led(LED_RED, 1);
           delay(512000U);
           current_board->set_led(LED_RED, 0);
           delay(512000U);
         }
-      #endif
     } else {
       __WFI();
     }
