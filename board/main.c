@@ -848,7 +848,7 @@ int main(void) {
     if (power_save_status == POWER_SAVE_STATUS_DISABLED) {
       if(fault_status == FAULT_STATUS_NONE){
         // stop flashing after 10 seconds of uptime
-        if (uptime_cnt < 10){
+        if (uptime_cnt < 10U){
           uint32_t div_mode = ((usb_power_mode == USB_POWER_DCP) ? 4U : 1U);
 
           // useful for debugging, fade breaks = panda is overloaded
@@ -868,7 +868,7 @@ int main(void) {
         }
         // make sure the led gets turned off
         else {
-          if ((uptime_cnt > 10) && (uptime_cnt < 12)){
+          if ((uptime_cnt > 10U) && (uptime_cnt < 12U)){
             current_board->set_led(LED_RED, false);
           }
         }
