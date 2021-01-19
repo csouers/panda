@@ -1,13 +1,14 @@
 #define CAN_GATEWAY_INPUT 0x800
 #define CAN_GATEWAY_OUTPUT 0x801
 #define CAN_GATEWAY_SIZE 8
+#define OTA_IN 0x1
 
 static int elm327_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   int tx = 1;
   int addr = GET_ADDR(to_send);
   int len = GET_LEN(to_send);
-  
+
   // TODO: Replace this with the check functionality from safety_honda
   bool is_body = (addr == 0x16f118f0) || (addr == 0x0ef81218) || (addr == CAN_GATEWAY_INPUT);
   if (is_body) {
@@ -24,6 +25,11 @@ static int elm327_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       tx = 0; // we shouldn't end up here if we did things correctly
     }
   }
+  // allow OTA flashing
+  else if (addr == OTA_IN){
+    tx = 1;
+  }
+
   else {
     //All ISO 15765-4 messages must be 8 bytes long
     if (len != 8) {

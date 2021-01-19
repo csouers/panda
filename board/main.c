@@ -724,9 +724,9 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
       if (heartbeat_counter >= (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)) {
         puts("EON hasn't sent a heartbeat for 0x");
         puth(heartbeat_counter);
-        puts(" seconds. Safety is set to SILENT mode.\n");
-        if (current_safety_mode != SAFETY_SILENT) {
-          set_safety_mode(SAFETY_SILENT, 0U);
+        puts(" seconds. Safety is set to ELM327 mode.\n");
+        if (current_safety_mode != SAFETY_ELM327) {
+          set_safety_mode(SAFETY_ELM327, 0U);
         }
         if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
           set_power_save_state(POWER_SAVE_STATUS_ENABLED);
