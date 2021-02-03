@@ -34,13 +34,17 @@ static void honda_body_init(int16_t param) {
 
 static int honda_body_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   int bus_fwd = -1;
-  int bus_powertrain = 0;  // powertrain bus (eps, adas control, etc)
-  int bus_body = 1;  // body bus
+
+  // bus 0: powertrain bus (eps, adas control, etc)
+  // bus 1: body bus
+  // bus 2: obd2 bus
+  int bus_powertrain = 0;
+  int bus_body = 1;
 
   if (bus_num == bus_powertrain) {
       int addr = GET_ADDR(to_fwd);
-      // TODO add safety checks for each message type
-      int security_msg = (addr == 0x0ef81218);
+      // TODO: add byte level safety checks for each message type
+      int security_msg = (addr == 0xef81218);
       int ioc_msg = (addr == 0x16f118f0);
 
       if (security_msg || ioc_msg) {
