@@ -130,7 +130,8 @@ void set_safety_mode(uint16_t mode, int16_t param) {
       if (board_has_obd()) {
         current_board->set_can_mode(CAN_MODE_NORMAL);
       }
-      can_silent = ALL_CAN_SILENT;
+      // hack to send fake ADAS while we don't have a phone connected
+      can_silent = ALL_CAN_LIVE;
       break;
     case SAFETY_NOOUTPUT:
       set_intercept_relay(false);
