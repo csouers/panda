@@ -16,7 +16,11 @@ void send_1df(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0x0008d08a;
-  to_send.RDHR = 0x0;
+  to_send.RDHR = 0x0 + (idx_1df << 28);
+  idx_1df++;
+  if (idx_1df >= 4U){
+    idx_1df = 0U;
+  }
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -28,7 +32,11 @@ void send_1ef(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0x7500FF03;
-  to_send.RDHR = 0x0;
+  to_send.RDHR = 0x0 + (idx_1ef << 28);
+  idx_1ef++;
+  if (idx_1ef >= 4U){
+    idx_1ef = 0U;
+  }
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -40,7 +48,11 @@ void send_1fa(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0x0;
-  to_send.RDHR = 0x0;
+  to_send.RDHR = 0x0 + (idx_1fa << 28);
+  idx_1fa++;
+  if (idx_1fa >= 4U){
+    idx_1fa = 0U;
+  }
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -52,7 +64,11 @@ void send_30c(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0xFF000000;
-  to_send.RDHR = 0x00c0c019;
+  to_send.RDHR = 0x00c0c019 + (idx_30c << 28);
+  idx_30c++;
+  if (idx_30c >= 4U){
+    idx_30c = 0U;
+  }
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -64,7 +80,11 @@ void send_39f(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0x00003000;
-  to_send.RDHR = 0x0;
+  to_send.RDHR = 0x0 + (idx_39f << 28);
+  idx_39f++;
+  if (idx_39f>= 4U){
+    idx_39f = 0U;
+  }
   can_send(&to_send, bus_fcan, true);
 }
 
