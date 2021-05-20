@@ -1,3 +1,6 @@
+// todo: get this from safety_hondaa
+static uint8_t honda_compute_checksum(CAN_FIFOMailBox_TypeDef *to_push);
+
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
 
 // refactor all of this down after it works
@@ -16,11 +19,16 @@ void send_1df(uint32_t RIR, uint32_t RDTR) {
   to_send.RIR = (msg_addr << 21) + (addr_mask & (RIR | 1));
   to_send.RDTR = (RDTR & 0xFFFFFFF0) | msg_len;
   to_send.RDLR = 0x0008d08a;
+  // add counter
   to_send.RDHR = 0x0 + (idx_1df << 28);
   idx_1df++;
   if (idx_1df >= 4U){
     idx_1df = 0U;
   }
+  // add sum
+  uint8_t sum = honda_compute_checksum(&to_send);
+  to_send.RDHR = to_send.RDHR + (sum << 24);
+
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -37,6 +45,9 @@ void send_1ef(uint32_t RIR, uint32_t RDTR) {
   if (idx_1ef >= 4U){
     idx_1ef = 0U;
   }
+  // add sum
+  uint8_t sum = honda_compute_checksum(&to_send);
+  to_send.RDHR = to_send.RDHR + (sum << 24);
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -53,6 +64,9 @@ void send_1fa(uint32_t RIR, uint32_t RDTR) {
   if (idx_1fa >= 4U){
     idx_1fa = 0U;
   }
+  // add sum
+  uint8_t sum = honda_compute_checksum(&to_send);
+  to_send.RDHR = to_send.RDHR + (sum << 24);
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -69,6 +83,9 @@ void send_30c(uint32_t RIR, uint32_t RDTR) {
   if (idx_30c >= 4U){
     idx_30c = 0U;
   }
+  // add sum
+  uint8_t sum = honda_compute_checksum(&to_send);
+  to_send.RDHR = to_send.RDHR + (sum << 24);
   can_send(&to_send, bus_fcan, true);
 }
 
@@ -85,6 +102,9 @@ void send_39f(uint32_t RIR, uint32_t RDTR) {
   if (idx_39f>= 4U){
     idx_39f = 0U;
   }
+  // add sum
+  uint8_t sum = honda_compute_checksum(&to_send);
+  to_send.RDHR = to_send.RDHR + (sum << 24);
   can_send(&to_send, bus_fcan, true);
 }
 
