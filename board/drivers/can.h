@@ -375,8 +375,8 @@ void ignition_can_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 }
 // ******************** Body *************** //
 #ifdef GATEWAY
-  #define CAN_GATEWAY_INPUT 0x800
-  #define CAN_GATEWAY_OUTPUT 0x801
+  #define OP_STATE 0x800
+  #define GATEWAY_STATE 0x801
   #define CAN_GATEWAY_SIZE 8
 #endif
 
@@ -400,7 +400,7 @@ void can_rx(uint8_t can_number) {
 
     if (bus_number == 0U){
       int address = GET_ADDR(&to_push);
-      if (address == CAN_GATEWAY_INPUT){
+      if (address == OP_STATE){
         // softloader entry
         if (GET_BYTES_04(&to_push) == 0xdeadface) {
           if (GET_BYTES_48(&to_push) == 0x0ab00b1e) {
