@@ -17,6 +17,7 @@ static int elm327_tx_hook(CANPacket_t *to_send) {
   }
   else if (b0_msg){
     if ((len != 0) && (addr == 0x1e12ff18)){ // 2017 honda civic hatch keyfob replay
+    }
   }
   //All ISO 15765-4, OTA, BCM IO Diagnostic, and OP system state messages must be 8 bytes long
   else {
