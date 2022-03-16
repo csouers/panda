@@ -46,7 +46,7 @@ static int honda_body_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
       // TODO: add byte level safety checks for each message type
       int security_msg = (addr == 0xef81218);
       int ioc_msg = (addr == 0x16f118f0);
-      int wakeup_msg = addr == 0x1e12ff18);
+      int wakeup_msg = (addr == 0x1e12ff18);
 
       if (security_msg || ioc_msg || wakeup_msg) {
         bus_fwd = bus_body;
