@@ -10,6 +10,7 @@ class CanHandle(object):
     self.p = p
 
   def transact(self, dat):
+    self.p.send_heartbeat()
     self.p.isotp_send(1, dat, 0, recvaddr=2)
 
     def _handle_timeout(signum, frame):
@@ -50,6 +51,7 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   p = Panda()
+  p.send_heartbeat()
   p.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
 
   while 1:
@@ -64,8 +66,10 @@ if __name__ == "__main__":
 
   if args.fn:
     time.sleep(0.1)
+    p.send_heartbeat()
     print("flashing", args.fn)
     code = open(args.fn, "rb").read()
+    p.send_heartbeat()
     Panda.flash_static(CanHandle(p), code)
 
   print("can flash done")
