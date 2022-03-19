@@ -347,8 +347,8 @@ static int honda_tx_hook(CANPacket_t *to_send) {
   // TODO: move to gateway firmware
   if (addr == 0x16F118F0){
 
-    bool signalCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES_04(to_send) == 0x000F0A30) || (GET_BYTES_04(to_send) == 0x000F0B30)) && (GET_BYTES_48(to_send) == 0x0));
-    bool cancelCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTES_04(to_send) == 0x00000020) && (GET_BYTES_48(to_send) == 0x0));
+    bool signalCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES_04(to_send) == 0x000F0A30U) || (GET_BYTES_04(to_send) == 0x000F0B30U)) && (GET_BYTES_48(to_send) == 0x0U));
+    bool cancelCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTES_04(to_send) == 0x00000020U) && (GET_BYTES_48(to_send) == 0x0U));
 
     // always allow cancel
     if (!cancelCmd) {
