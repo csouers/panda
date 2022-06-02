@@ -9,6 +9,7 @@
 #include "safety/safety_ford.h"
 #include "safety/safety_hyundai.h"
 #include "safety/safety_chrysler.h"
+#include "safety/safety_crossfire.h"
 #include "safety/safety_subaru.h"
 #include "safety/safety_mazda.h"
 #include "safety/safety_nissan.h"
@@ -40,6 +41,7 @@
 #define SAFETY_HYUNDAI_LEGACY 23U
 #define SAFETY_HYUNDAI_COMMUNITY 24U
 #define SAFETY_STELLANTIS 25U
+#define SAFETY_CROSSFIRE 26U
 
 uint16_t current_safety_mode = SAFETY_SILENT;
 int16_t current_safety_param = 0;
