@@ -212,6 +212,9 @@ void ignition_can_hook(CANPacket_t *to_push) {
       ignition_can = (GET_BYTE(to_push, 0) >> 5) == 0x6U;
     }
 
+    if (addr == 0x230) {
+      ignition_can = true;
+    }
   }
 }
 
