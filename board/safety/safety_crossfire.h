@@ -6,9 +6,7 @@
 //      accel rising edge
 //      brake rising edge
 //      brake > 0mph
-const CanMsg crossfire_N_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
-const CanMsg crossfire_BOSCH_TX_MSGS[] = {{0xE4, 0, 5}, {0xE5, 0, 8}, {0x296, 1, 4}, {0x33D, 0, 5}, {0x33DA, 0, 5}, {0x33DB, 0, 8}, {0x16F118F0, 0, 8}};  // Bosch
-const CanMsg crossfire_BOSCH_LONG_TX_MSGS[] = {{0xE4, 1, 5}, {0x1DF, 1, 8}, {0x1EF, 1, 8}, {0x1FA, 1, 8}, {0x30C, 1, 8}, {0x33D, 1, 5}, {0x33DA, 1, 5}, {0x33DB, 1, 8}, {0x39F, 1, 8}, {0x18DAB0F1, 1, 8}, {0x16F118F0, 0, 8}};  // Bosch w/ gas and brakes
+// const CanMsg crossfire_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
 
 // Roughly calculated using the offsets in openpilot +5%:
 // In openpilot: ((gas1_norm + gas2_norm)/2) > 15
@@ -66,6 +64,7 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
   // bool valid = addr_safety_check(to_push, &crossfire_rx_checks,
   //                                crossfire_get_checksum, crossfire_compute_checksum, crossfire_get_counter);
   bool valid = true;
+  controls_allowed = 1;
 
   // // TODO: add back crossfire Nidec once we handle it properly in openpilot
   // //const bool pcm_cruise = ((crossfire_hw == crossfire_BOSCH) && !crossfire_bosch_long) || ((crossfire_hw == crossfire_NIDEC) && !gas_interceptor_detected);
@@ -76,12 +75,6 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
     int len = GET_LEN(to_push);
     // int bus = GET_BUS(to_push);
 
-    // sample speed
-    if (addr == 0x158) {
-      // first 2 bytes
-      vehicle_moving = GET_BYTE(to_push, 0) | GET_BYTE(to_push, 1);
-    }
-
     // // check ACC main state
     // // 0x326 for all Bosch and some Nidec, 0x1A6 for some Nidec
     // if ((addr == 0x326) || (addr == 0x1A6)) {
@@ -91,8 +84,6 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
     //   }
     // }
 
-    controls_allowed = 1;
-    // find this!
 
     // // enter controls when PCM enters cruise state
     // if (pcm_cruise && (addr == 0x17C)) {
@@ -127,14 +118,15 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
     //   }
     // }
 
-    // todo add this!
-  //   if (addr == 0x17C) {
-  //     // also if brake switch is 1 for two CAN frames, as brake pressed is delayed
-  //     const bool brake_switch = GET_BIT(to_push, 32U) != 0U;
-  //     brake_pressed = (GET_BIT(to_push, 53U) != 0U) || (brake_switch && crossfire_brake_switch_prev);
-  //     crossfire_brake_switch_prev = brake_switch;
-  //   }
-  // }
+    if (addr == 0x300) {
+      // also if brake switch is 1 for two CAN frames, as brake pressed is delayed
+      const bool brake_switch = GET_BIT(to_push, 10U) != 0U;
+      brake_pressed = brake_switch;
+      crossfire_brake_switch_prev = brake_switch;
+      if (brake_switch){
+        controls_allowed = 0;
+      }
+    }
 
     // length check because bosch hardware also uses this id (0x201 w/ len = 8)
     if ((addr == 0x201) && (len == 6)) {
@@ -142,14 +134,10 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
       int gas_interceptor = crossfire_GET_INTERCEPTOR(to_push);
       gas_pressed = gas_interceptor > crossfire_GAS_INTERCEPTOR_THRESHOLD;
       gas_interceptor_prev = gas_interceptor;
-    }
-
-    if (!gas_interceptor_detected) {
-      if (addr == 0x17C) {
-        gas_pressed = GET_BYTE(to_push, 0) != 0U;
+      if (gas_pressed){
+        controls_allowed = 0;
       }
     }
-
     // generic_rx_checks(stock_ecu_detected);
 
   }
@@ -168,12 +156,12 @@ static int crossfire_tx_hook(CANPacket_t *to_send) {
   int addr = GET_ADDR(to_send);
   // int bus = GET_BUS(to_send);
 
-  // tx = msg_allowed(to_send, crossfire_N_TX_MSGS, sizeof(crossfire_N_TX_MSGS)/sizeof(crossfire_N_TX_MSGS[0]));
+  // tx = msg_allowed(to_send, crossfire_TX_MSGS, sizeof(crossfire_TX_MSGS)/sizeof(crossfire_TX_MSGS[0]));
 
 
   // disallow actuator commands if gas or brake (with vehicle moving) are pressed
   // and the the latching controls_allowed flag is True
-  int pedal_pressed = brake_pressed_prev && vehicle_moving;
+  int pedal_pressed = brake_pressed_prev;
   pedal_pressed = pedal_pressed || gas_pressed_prev;
   bool current_controls_allowed = controls_allowed && !(pedal_pressed);
   // int bus_pt = 0;
