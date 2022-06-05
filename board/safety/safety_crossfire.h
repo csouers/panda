@@ -6,7 +6,7 @@
 //      accel rising edge
 //      brake rising edge
 //      brake > 0mph
-// const CanMsg crossfire_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
+const CanMsg crossfire_TX_MSGS[] = {{0x200, 0, 5}, {0x201, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
 
 // Roughly calculated using the offsets in openpilot +5%:
 // In openpilot: ((gas1_norm + gas2_norm)/2) > 15
@@ -14,7 +14,7 @@
 // gas_norm2 = ((gain_dbc2*gas2) + offset_dbc)
 // assuming that 2*(gain_dbc1*gas1) == (gain_dbc2*gas2)
 // In this safety: ((gas1 + (gas2/2))/2) > THRESHOLD
-const int crossfire_GAS_INTERCEPTOR_THRESHOLD = 344;
+const int crossfire_GAS_INTERCEPTOR_THRESHOLD = 142;
 #define crossfire_GET_INTERCEPTOR(msg) (((GET_BYTE((msg), 0) << 8) + GET_BYTE((msg), 1) + ((GET_BYTE((msg), 2) << 8) + GET_BYTE((msg), 3)) / 2U ) / 2U) // avg between 2 tracks
 
 // Nidec has the powertrain bus on bus 0
@@ -134,9 +134,9 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
       int gas_interceptor = crossfire_GET_INTERCEPTOR(to_push);
       gas_pressed = gas_interceptor > crossfire_GAS_INTERCEPTOR_THRESHOLD;
       gas_interceptor_prev = gas_interceptor;
-      if (gas_pressed){
-        controls_allowed = 0;
-      }
+      // if (gas_pressed){
+      //   controls_allowed = 0;
+      // }
     }
     // generic_rx_checks(stock_ecu_detected);
 
