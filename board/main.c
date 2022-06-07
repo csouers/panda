@@ -24,7 +24,6 @@
 
 #include "usb_comms.h"
 
-
 // ********************* Serial debugging *********************
 
 bool check_started(void) {
@@ -114,7 +113,7 @@ void set_safety_mode(uint16_t mode, int16_t param) {
       can_silent = ALL_CAN_LIVE;
       break;
     default:
-      set_intercept_relay(true);
+      set_intercept_relay(false);
       heartbeat_counter = 0U;
       heartbeat_lost = false;
       if (current_board->has_obd) {
@@ -256,7 +255,7 @@ void tick_handler(void) {
       // check registers
       check_registers();
 
-      // set ignition_can to false after 2s of no CAN seen
+      // set ignition_can to false after 1s of no CAN seen
       if (ignition_can_cnt > 1U) {
         ignition_can = false;
       }

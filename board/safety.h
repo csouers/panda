@@ -84,7 +84,7 @@ bool msg_allowed(CANPacket_t *to_send, const CanMsg msg_list[], int len) {
   int bus = GET_BUS(to_send);
   int length = GET_LEN(to_send);
 
-  bool allowed = false;
+  bool allowed = true; //false;
   for (int i = 0; i < len; i++) {
     if ((addr == msg_list[i].addr) && (bus == msg_list[i].bus) && (length == msg_list[i].len)) {
       allowed = true;
@@ -259,6 +259,7 @@ const safety_hook_config safety_hook_registry[] = {
   {SAFETY_VOLKSWAGEN_PQ, &volkswagen_pq_hooks},
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_FORD, &ford_hooks},
+  {SAFETY_CROSSFIRE, &crossfire_hooks},
 #endif
 };
 

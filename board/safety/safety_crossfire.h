@@ -6,7 +6,7 @@
 //      accel rising edge
 //      brake rising edge
 //      brake > 0mph
-const CanMsg crossfire_TX_MSGS[] = {{0x200, 0, 5}, {0x201, 0, 4}, {0x1FA, 0, 8}, {0x200, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
+const CanMsg crossfire_TX_MSGS[] = {{0x202, 0, 5}, {0x201, 0, 4}, {0x1FA, 0, 8}, {0x202, 0, 6}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}};
 
 // Roughly calculated using the offsets in openpilot +5%:
 // In openpilot: ((gas1_norm + gas2_norm)/2) > 15
@@ -64,59 +64,32 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
   // bool valid = addr_safety_check(to_push, &crossfire_rx_checks,
   //                                crossfire_get_checksum, crossfire_compute_checksum, crossfire_get_counter);
   bool valid = true;
-  controls_allowed = 1;
-
-  // // TODO: add back crossfire Nidec once we handle it properly in openpilot
-  // //const bool pcm_cruise = ((crossfire_hw == crossfire_BOSCH) && !crossfire_bosch_long) || ((crossfire_hw == crossfire_NIDEC) && !gas_interceptor_detected);
-  // const bool pcm_cruise = ((crossfire_hw == crossfire_BOSCH) && !crossfire_bosch_long);
 
   if (valid) {
     int addr = GET_ADDR(to_push);
-    int len = GET_LEN(to_push);
+    //int len = GET_LEN(to_push);
     // int bus = GET_BUS(to_push);
 
-    // // check ACC main state
-    // // 0x326 for all Bosch and some Nidec, 0x1A6 for some Nidec
-    // if ((addr == 0x326) || (addr == 0x1A6)) {
-    //   acc_main_on = GET_BIT(to_push, ((addr == 0x326) ? 28U : 47U));
-    //   if (!acc_main_on) {
-    //     controls_allowed = 0;
-    //   }
-    // }
+    // cruise available (exceed min speed)
+    if (addr == 0x200) {
+      acc_main_on = true;//GET_BIT(to_push, 4);
+      if (!acc_main_on) {
+         controls_allowed = 0;
+       }
 
+     }
 
-    // // enter controls when PCM enters cruise state
-    // if (pcm_cruise && (addr == 0x17C)) {
-    //   const bool cruise_engaged = GET_BIT(to_push, 38U) != 0U;
-    //   if (!cruise_engaged) {
-    //     controls_allowed = 0;
-    //   }
-    //   if (cruise_engaged && !cruise_engaged_prev) {
-    //     controls_allowed = 1;
-    //   }
-    //   cruise_engaged_prev = cruise_engaged;
-    // }
-
-    // // state machine to enter and exit controls for button enabling
-    // // 0x1A6 for the ILX, 0x296 for the Civic Touring
-    // if (!pcm_cruise && ((addr == 0x1A6) || (addr == 0x296))) {
-    //   // check for button presses
-    //   int button = (GET_BYTE(to_push, 0) & 0xE0U) >> 5;
-    //   switch (button) {
-    //     case 1:  // main
-    //     case 2:  // cancel
-    //       controls_allowed = 0;
-    //       break;
-    //     case 3:  // set
-    //     case 4:  // resume
-    //       if (acc_main_on) {
-    //         controls_allowed = 1;
-    //       }
-    //       break;
-    //     default:
-    //       break; // any other button is irrelevant
-    //   }
-    // }
+     // enter controls when PCM exits cruise state
+     if (addr == 0x210) {
+       const bool cruise_engaged = GET_BIT(to_push, 36U) != 0U;
+       if (cruise_engaged) {
+         controls_allowed = 0;
+       }
+       if (!cruise_engaged && cruise_engaged_prev){
+         controls_allowed = 1;
+       }
+       cruise_engaged_prev = cruise_engaged;
+     }
 
     if (addr == 0x300) {
       // also if brake switch is 1 for two CAN frames, as brake pressed is delayed
@@ -128,15 +101,14 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
       }
     }
 
-    // length check because bosch hardware also uses this id (0x201 w/ len = 8)
-    if ((addr == 0x201) && (len == 6)) {
+    if (addr == 0x201) {
       gas_interceptor_detected = 1;
       int gas_interceptor = crossfire_GET_INTERCEPTOR(to_push);
       gas_pressed = gas_interceptor > crossfire_GAS_INTERCEPTOR_THRESHOLD;
       gas_interceptor_prev = gas_interceptor;
-      // if (gas_pressed){
-      //   controls_allowed = 0;
-      // }
+      if (gas_pressed){
+        controls_allowed = 0;
+      }
     }
     // generic_rx_checks(stock_ecu_detected);
 
@@ -151,109 +123,25 @@ static int crossfire_rx_hook(CANPacket_t *to_push) {
 //     block all commands that produce actuation
 
 static int crossfire_tx_hook(CANPacket_t *to_send) {
-
   int tx = 1;
   int addr = GET_ADDR(to_send);
   // int bus = GET_BUS(to_send);
-
   // tx = msg_allowed(to_send, crossfire_TX_MSGS, sizeof(crossfire_TX_MSGS)/sizeof(crossfire_TX_MSGS[0]));
 
 
   // disallow actuator commands if gas or brake (with vehicle moving) are pressed
   // and the the latching controls_allowed flag is True
-  int pedal_pressed = brake_pressed_prev;
-  pedal_pressed = pedal_pressed || gas_pressed_prev;
+  int pedal_pressed = brake_pressed_prev || gas_pressed_prev;
   bool current_controls_allowed = controls_allowed && !(pedal_pressed);
-  // int bus_pt = 0;
-
-  // BRAKE: safety check (nidec)
-  // if ((addr == 0x1FA) && (bus == bus_pt)) {
-  //   crossfire_brake = (GET_BYTE(to_send, 0) << 2) + ((GET_BYTE(to_send, 1) >> 6) & 0x3U);
-  //   if (!current_controls_allowed) {
-  //     if (crossfire_brake != 0) {
-  //       tx = 0;
-  //     }
-  //   }
-  //   if (crossfire_brake > 255) {
-  //     tx = 0;
-  //   }
-  //   if (crossfire_fwd_brake) {
-  //     tx = 0;
-  //   }
-  // }
-
-  // todo do this!
-  // BRAKE/GAS: safety check (bosch)
-  // if ((addr == 0x1DF) && (bus == bus_pt)) {
-  //   int accel = (GET_BYTE(to_send, 3) << 3) | ((GET_BYTE(to_send, 4) >> 5) & 0x7U);
-  //   accel = to_signed(accel, 11);
-  //   if (!current_controls_allowed) {
-  //     if (accel != 0) {
-  //       tx = 0;
-  //     }
-  //   }
-  //   if (accel < crossfire_BOSCH_ACCEL_MIN) {
-  //     tx = 0;
-  //   }
-  //
-  //   int gas = (GET_BYTE(to_send, 0) << 8) | GET_BYTE(to_send, 1);
-  //   gas = to_signed(gas, 16);
-  //   if (!current_controls_allowed) {
-  //     if (gas != crossfire_BOSCH_NO_GAS_VALUE) {
-  //       tx = 0;
-  //     }
-  //   }
-  //   if (gas > crossfire_BOSCH_GAS_MAX) {
-  //     tx = 0;
-  //   }
-  // }
 
   // GAS: safety check (interceptor)
-  if (addr == 0x200) {
+  if (addr == 0x202) {
     if (!current_controls_allowed) {
       if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
         tx = 0;
       }
     }
   }
-
-  // // FORCE CANCEL: safety check only relevant when spamming the cancel button in Bosch HW
-  // // ensuring that only the cancel button press is sent (VAL 2) when controls are off.
-  // // This avoids unintended engagements while still allowing resume spam
-  // if ((addr == 0x296) && !current_controls_allowed && (bus == bus_pt)) {
-  //   if (((GET_BYTE(to_send, 0) >> 5) & 0x7U) != 2U) {
-  //     tx = 0;
-  //   }
-  // }
-  // TODO: gateway packet
-  // if (addr == 0x800) {
-  //
-  // }
-
-  // KWP over CAN. Allow only short turn signal request and cancel
-  // TODO: move to gateway firmware
-  // if (addr == 0x16F118F0){
-  //
-  //   bool signalCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES_04(to_send) == 0x000F0A30U) || (GET_BYTES_04(to_send) == 0x000F0B30U)) && (GET_BYTES_48(to_send) == 0x0U));
-  //   bool cancelCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTES_04(to_send) == 0x00000020U) && (GET_BYTES_48(to_send) == 0x0U));
-  //
-  //   // always allow cancel
-  //   if (!cancelCmd) {
-  //     if (!current_controls_allowed) {
-  //       tx = 0;
-  //     }
-  //     if (current_controls_allowed && !signalCmd){
-  //       tx = 0;
-  //     }
-  //   }
-  // }
-
-  // Only tester present ("\x02\x3E\x80\x00\x00\x00\x00\x00") allowed on diagnostics address
-  // if (addr == 0x18DAB0F1) {
-  //   if ((GET_BYTES_04(to_send) != 0x00803E02U) || (GET_BYTES_48(to_send) != 0x0U)) {
-  //     tx = 0;
-  //   }
-  // }
 
   // 1 allows the message through
   return tx;
