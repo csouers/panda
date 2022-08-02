@@ -343,16 +343,17 @@ static int honda_tx_hook(CANPacket_t *to_send) {
   //
   // }
 
-  // KWP over CAN. Allow only short turn signal request and cancel
+  // KWP over CAN
   // TODO: move to gateway firmware
   if (addr == 0x16F118F0){
     // turn signals (no flashers)
     bool engagedCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES_04(to_send) == 0x000F0A30U) || (GET_BYTES_04(to_send) == 0x000F0B30U)) && (GET_BYTES_48(to_send) == 0x0U));
     // fog lamps
     bool disengagedCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTES_04(to_send) == 0x000F2030U) && (GET_BYTES_48(to_send) == 0x0U));
-    bool cancelCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTES_04(to_send) == 0x00000020U) && (GET_BYTES_48(to_send) == 0x0U));
+    // universal command per module
+    bool cancelCmd = ((GET_LEN(to_send) == 8U) && (GET_BYTE(to_send, 0) == 0x20U) && (GET_BYTES_48(to_send) == 0x0U));
 
-    // always allow cancel and idle
+    // always allow cancel
     if (!cancelCmd) {
       if (!current_controls_allowed && !disengagedCmd) {
         tx = 0;
