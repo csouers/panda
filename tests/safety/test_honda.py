@@ -574,8 +574,8 @@ class TestHondaBoschRadarless(HondaPcmEnableBase, TestHondaBoschSafetyBase):
   STEER_BUS = 0
   BUTTONS_BUS = 2  # camera controls ACC, need to send buttons on bus 2
 
-  TX_MSGS = [[0xE4, 0], [0x296, 2], [0x33D, 0]]
-  FWD_BLACKLISTED_ADDRS = {2: [0xE4, 0xE5, 0x33D, 0x33DA, 0x33DB]}
+  TX_MSGS = [[0xE4, 0], [0x1C9, 0], [0x296, 2], [0x33D, 0]]
+  FWD_BLACKLISTED_ADDRS = {2: [0xE4, 0xE5, 0x1C9, 0x33D, 0x33DA, 0x33DB]}
 
   def setUp(self):
     self.packer = CANPackerPanda("honda_civic_ex_2022_can_generated")
