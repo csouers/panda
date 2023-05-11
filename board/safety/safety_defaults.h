@@ -68,15 +68,17 @@ static int alloutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
 static int alloutput_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
   UNUSED(addr);
+  UNUSED(bus_num);
+  UNUSED(bus_fwd);
 
-  if (alloutput_passthrough) {
-    if (bus_num == 0) {
-      bus_fwd = 2;
-    }
-    if (bus_num == 2) {
-      bus_fwd = 0;
-    }
-  }
+  // if (alloutput_passthrough) {
+  //   if (bus_num == 0) {
+  //     bus_fwd = 2;
+  //   }
+  //   if (bus_num == 2) {
+  //     bus_fwd = 0;
+  //   }
+  // }
 
   return bus_fwd;
 }
