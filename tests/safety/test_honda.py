@@ -110,15 +110,15 @@ class HondaButtonEnableBase(common.PandaCarSafetyTest):
   # Never allow dangerous commands; e.g. trunk release
   def test_kwp_over_can(self):
     self.safety.set_controls_allowed(0)
-    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdCancelMsg)))
-    self.assertFalse(self._tx(self.kwp_msg(turnSignalCmdLeftMsg)))
-    self.assertFalse(self._tx(self.kwp_msg(turnSignalCmdRightMsg)))
-    self.assertFalse(self._tx(self.kwp_msg(trunkCmdReleaseMsg)))
+    self.assertTrue(self._tx(kwp_msg(turnSignalCmdCancelMsg)))
+    self.assertFalse(self._tx(kwp_msg(turnSignalCmdLeftMsg)))
+    self.assertFalse(self._tx(kwp_msg(turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(kwp_msg(trunkCmdReleaseMsg)))
     self.safety.set_controls_allowed(1)
-    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdCancelMsg)))
-    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdLeftMsg)))
-    self.assertTrue(self._tx(self.kwp_msg(turnSignalCmdRightMsg)))
-    self.assertFalse(self._tx(self.kwp_msg(trunkCmdReleaseMsg)))
+    self.assertTrue(self._tx(kwp_msg(turnSignalCmdCancelMsg)))
+    self.assertTrue(self._tx(kwp_msg(turnSignalCmdLeftMsg)))
+    self.assertTrue(self._tx(kwp_msg(turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(kwp_msg(trunkCmdReleaseMsg)))
 
   def test_rx_hook(self):
 
