@@ -40,7 +40,7 @@ static bool elm327_tx_hook(CANPacket_t *to_send) {
   if ((addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
       ((addr & 0x1FFFFF00) != 0x600) && ((addr & 0x1FFFFF00) != 0x700)) {
     tx = false;
-  }
+    }
   }
   return tx;
 }
