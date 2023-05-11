@@ -379,10 +379,10 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
     // always allow cancel
     if (!cancelCmd) {
       if (!controls_allowed) {
-        tx = 0;
+        tx = false;
       }
-      if (controls_allowed && !signalCmd){
-        tx = 0;
+      else if (!signalCmd){
+        tx = false;
       }
     }
   }
