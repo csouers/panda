@@ -370,7 +370,7 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
   if (addr == 0x16F118F0){
 
     bool signalCmd = ((GET_LEN(to_send) == 8) && ((GET_BYTES(to_send, 0, 4) == 0x000F0A30) || (GET_BYTES(to_send, 0, 4) == 0x000F0B30)) && (GET_BYTES(to_send, 4, 4) == 0x0));
-    bool cancelCmd = ((GET_LEN(to_send) == 1) && (GET_BYTE(to_send, 0) == 0x20));
+    bool cancelCmd = (GET_BYTE(to_send, 0) == 0x20);
 
     // always allow cancel
     if (!cancelCmd) {
