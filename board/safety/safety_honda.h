@@ -364,10 +364,6 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
       tx = false;
     }
   }
-  // TODO: gateway packet
-  // if (addr == 0x800) {
-  //
-  // }
 
   // KWP over CAN. Allow only short turn signal request and cancel
   // TODO: move to gateway firmware
