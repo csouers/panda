@@ -368,17 +368,17 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
   // KWP over CAN. Allow only short turn signal request and cancel
   // TODO: move to gateway firmware
   if (addr == 0x16F118F0){
-
-    bool signalCmd = ((GET_LEN(to_send) == 8) && ((GET_BYTES(to_send, 0, 4) == 0x000F0A30) || (GET_BYTES(to_send, 0, 4) == 0x000F0B30)) && (GET_BYTES(to_send, 4, 4) == 0x0));
-    bool cancelCmd = ((GET_LEN(to_send) == 1) && (GET_BYTE(to_send, 0) == 0x20));
-
+    bool signalCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES(to_send, 0, 4) == 0x000F0A30U) || (GET_BYTES(to_send, 0, 4) == 0x000F0B30U)) && (GET_BYTES(to_send, 4, 4) == 0x0U));
+    bool cancelCmd = ((GET_LEN(to_send) == 1U) && (GET_BYTE(to_send, 0) == 0x20U));
     // always allow cancel
     if (!cancelCmd) {
       if (!controls_allowed) {
         tx = false;
       }
-      else if (!signalCmd){
-        tx = false;
+      else {
+        if (!signalCmd) {
+          tx = false;
+        }
       }
     }
   }
