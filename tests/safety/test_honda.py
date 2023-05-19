@@ -35,8 +35,10 @@ def interceptor_msg(gas, addr):
 #    * interceptor
 #    * interceptor with alt SCM messages
 #  * Bosch
+#    * Bosch with Stock ACC
 #    * Bosch with Longitudinal Support
 #  * Bosch Radarless
+#    * Bosch Radarless with Stock ACC
 #    * Bosch Radarless with Longitudinal Support
 
 
@@ -182,6 +184,7 @@ class HondaBase(common.PandaSafetyTest):
 
   cnt_speed = 0
   cnt_button = 0
+  cnt_button_alt = 0
   cnt_brake = 0
   cnt_powertrain_data = 0
   cnt_acc_state = 0
@@ -225,10 +228,15 @@ class HondaBase(common.PandaSafetyTest):
     self.__class__.cnt_acc_state += 1
     return self.packer.make_can_msg_panda("SCM_FEEDBACK", self.PT_BUS, values)
 
-  def _button_msg(self, buttons, main_on=False, bus=None):
+  # TODO: Messy. RX and TX with same counter variable causes counter mismatch in test suite
+  def _button_msg(self, buttons, main_on=False, bus=None, alt_counter=False):
     bus = self.PT_BUS if bus is None else bus
-    values = {"CRUISE_BUTTONS": buttons, "COUNTER": self.cnt_button % 4}
-    self.__class__.cnt_button += 1
+    if alt_counter:
+      values = {"CRUISE_BUTTONS": buttons, "COUNTER": self.cnt_button_alt % 4}
+      self.__class__.cnt_button_alt += 1
+    else:
+      values = {"CRUISE_BUTTONS": buttons, "COUNTER": self.cnt_button % 4}
+      self.__class__.cnt_button += 1
     return self.packer.make_can_msg_panda("SCM_BUTTONS", bus, values)
 
   def _user_brake_msg(self, brake):
@@ -358,7 +366,7 @@ class TestHondaNidecAltSafety(TestHondaNidecSafety):
     self.__class__.cnt_acc_state += 1
     return self.packer.make_can_msg_panda("SCM_BUTTONS", self.PT_BUS, values)
 
-  def _button_msg(self, buttons, main_on=False, bus=None):
+  def _button_msg(self, buttons, main_on=False, bus=None, alt_counter=False):
     bus = self.PT_BUS if bus is None else bus
     values = {"CRUISE_BUTTONS": buttons, "MAIN_ON": main_on, "COUNTER": self.cnt_button % 4}
     self.__class__.cnt_button += 1
@@ -380,7 +388,7 @@ class TestHondaNidecAltInterceptorSafety(TestHondaNidecSafety, common.Intercepto
     self.__class__.cnt_acc_state += 1
     return self.packer.make_can_msg_panda("SCM_BUTTONS", self.PT_BUS, values)
 
-  def _button_msg(self, buttons, main_on=False, bus=None):
+  def _button_msg(self, buttons, main_on=False, bus=None, alt_counter=False):
     bus = self.PT_BUS if bus is None else bus
     values = {"CRUISE_BUTTONS": buttons, "MAIN_ON": main_on, "COUNTER": self.cnt_button % 4}
     self.__class__.cnt_button += 1
@@ -518,7 +526,7 @@ class TestHondaBoschRadarlessSafetyBase(TestHondaBoschSafetyBase):
   BUTTONS_BUS = 2  # camera controls ACC, need to send buttons on bus 2
 
   TX_MSGS = [[0xE4, 0], [0x296, 2], [0x33D, 0]]
-  FWD_BLACKLISTED_ADDRS = {2: [0xE4, 0xE5, 0x33D, 0x33DA, 0x33DB]}
+  FWD_BLACKLISTED_ADDRS = {0: [0x296], 2: [0xE4, 0xE5, 0x33D, 0x33DA, 0x33DB]}
 
   def setUp(self):
     self.packer = CANPackerPanda("honda_civic_ex_2022_can_generated")
@@ -534,6 +542,37 @@ class TestHondaBoschRadarlessSafety(HondaPcmEnableBase, TestHondaBoschRadarlessS
     super().setUp()
     self.safety.set_safety_hooks(Panda.SAFETY_HONDA_BOSCH, Panda.FLAG_HONDA_RADARLESS)
     self.safety.init_tests()
+  
+  def test_spam_cancel_safety_check(self):
+    # Radarless doesn't spam buttons
+    pass
+
+  def test_buttons(self):
+    """
+      If SET/RESUME button is sent by car/user, `honda_button_cnt` is set to BUTTON_TIMEOUT.
+      Subsequent frames of SCM_BUTTONS (25hz) with button of None or Cancel will decrement honda_button_cnt. 
+      Allow TX of all buttons if honda_button_cnt != 0 when !controls_allowed, otherwise, only allow None or Cancel.
+      System state remains tied to PcmEnable.
+    """
+    BUTTON_TIMEOUT = 25 # Must match HONDA_RADARLESS_BUTTON_TIMEOUT in board/safety/safety_honda.h
+    for controls_allowed in (False, True):
+      self.safety.set_controls_allowed(controls_allowed)
+      if not controls_allowed:
+        # Always allow None or Cancel
+        self._rx(self._button_msg(Btn.RESUME)) # Sent by car. Sets the counter to BUTTON_TIMEOUT
+        for timeout in range(BUTTON_TIMEOUT, -1 , -1):
+          self.assertEqual(timeout, self.safety.get_honda_button_cnt())
+          self.assertTrue(self._tx(self._button_msg(Btn.CANCEL, bus=self.BUTTONS_BUS, alt_counter=True)))
+          self.assertTrue(self._tx(self._button_msg(Btn.NONE, bus=self.BUTTONS_BUS, alt_counter=True)))
+          self.assertEqual(bool(timeout), self._tx(self._button_msg(Btn.RESUME, bus=self.BUTTONS_BUS, alt_counter=True)))
+          self.assertEqual(bool(timeout), self._tx(self._button_msg(Btn.SET, bus=self.BUTTONS_BUS, alt_counter=True)))
+          self._rx(self._button_msg(Btn.NONE))
+      else:
+        # Allow all buttons when engaged
+        self.assertTrue(self._tx(self._button_msg(Btn.CANCEL, bus=self.BUTTONS_BUS, alt_counter=True)))
+        self.assertTrue(self._tx(self._button_msg(Btn.NONE, bus=self.BUTTONS_BUS, alt_counter=True)))
+        self.assertTrue(self._tx(self._button_msg(Btn.RESUME, bus=self.BUTTONS_BUS, alt_counter=True)))
+        self.assertTrue(self._tx(self._button_msg(Btn.SET, bus=self.BUTTONS_BUS, alt_counter=True)))
 
 
 class TestHondaBoschRadarlessLongSafety(common.LongitudinalAccelSafetyTest, HondaButtonEnableBase,
@@ -558,7 +597,6 @@ class TestHondaBoschRadarlessLongSafety(common.LongitudinalAccelSafetyTest, Hond
   # Longitudinal doesn't need to send buttons
   def test_spam_cancel_safety_check(self):
     pass
-
 
 if __name__ == "__main__":
   unittest.main()

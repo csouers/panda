@@ -168,6 +168,10 @@ int get_honda_hw(void) {
   return honda_hw;
 }
 
+int get_honda_button_cnt(void) {
+  return honda_button_cnt;
+}
+
 void set_honda_fwd_brake(bool c){
   honda_fwd_brake = c;
 }

@@ -67,7 +67,7 @@ const uint16_t HONDA_PARAM_ALT_BRAKE = 1;
 const uint16_t HONDA_PARAM_BOSCH_LONG = 2;
 const uint16_t HONDA_PARAM_NIDEC_ALT = 4;
 const uint16_t HONDA_PARAM_RADARLESS = 8;
-
+const uint8_t HONDA_RADARLESS_BUTTON_TIMEOUT = 25;
 enum {
   HONDA_BTN_NONE = 0,
   HONDA_BTN_MAIN = 1,
@@ -82,6 +82,7 @@ bool honda_alt_brake_msg = false;
 bool honda_fwd_brake = false;
 bool honda_bosch_long = false;
 bool honda_bosch_radarless = false;
+int honda_button_cnt = 0;
 enum {HONDA_NIDEC, HONDA_BOSCH} honda_hw = HONDA_NIDEC;
 addr_checks honda_rx_checks = {honda_common_addr_checks, HONDA_COMMON_ADDR_CHECKS_LEN};
 
@@ -170,6 +171,11 @@ static int honda_rx_hook(CANPacket_t *to_push) {
       // exit controls once main or cancel are pressed
       if ((button == HONDA_BTN_MAIN) || (button == HONDA_BTN_CANCEL)) {
         controls_allowed = 0;
+      }
+
+      // Honda radarless w/ stock ACC: Allow buttons tx for 1 second (25hz)
+      if (honda_bosch_radarless && pcm_cruise) {
+        honda_button_cnt = ((button == HONDA_BTN_SET) || (button == HONDA_BTN_RESUME)) ? HONDA_RADARLESS_BUTTON_TIMEOUT : MAX(0, honda_button_cnt - 1);
       }
 
       // enter controls on the falling edge of set or resume
@@ -358,11 +364,16 @@ static int honda_tx_hook(CANPacket_t *to_send) {
     }
   }
 
-  // FORCE CANCEL: safety check only relevant when spamming the cancel button in Bosch HW
-  // ensuring that only the cancel button press is sent (VAL 2) when controls are off.
-  // This avoids unintended engagements while still allowing resume spam
+  // BUTTONS: safety for Bosch ACC with button spamming or intercepting: 
+  // -Bosch HW w/radar-
+  // Ensures that only the cancel button press is sent (VAL 2) when controls are off.
+  // This avoids unintended engagements while still allowing resume spam.
+
+  // -Bosch Radarless-
+  // When controls are off, the user must press SET or RESUME to engage. Always allow cancel and idle/no button.
   if ((addr == 0x296) && !controls_allowed && (bus == bus_buttons)) {
-    if (((GET_BYTE(to_send, 0) >> 5) & 0x7U) != 2U) {
+    uint8_t button = ((GET_BYTE(to_send, 0) >> 5) & 0x7U);
+    if (((button > 0U) && (button != 2U)) && !(honda_bosch_radarless && honda_button_cnt)) {
       tx = 0;
     }
   }
@@ -440,7 +451,11 @@ static int honda_bosch_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
   if (bus_num == 0) {
-    bus_fwd = 2;
+    bool is_button_msg = addr == 0x296;  
+    bool block_msg = is_button_msg && honda_bosch_radarless && !honda_bosch_long;
+    if (!block_msg) {
+      bus_fwd = 2;
+    }
   }
   if (bus_num == 2)  {
     int is_lkas_msg = (addr == 0xE4) || (addr == 0xE5) || (addr == 0x33D) || (addr == 0x33DA) || (addr == 0x33DB);
