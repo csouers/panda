@@ -33,8 +33,6 @@ def interceptor_msg(gas, addr):
   to_send[0].data[3] = gas & 0xFF
   return to_send
 
-def kwp_msg(msg):
-  return ([0x16F118F0, 0, msg, 0])
 
 # Honda safety has several different configurations tested here:
 #  * Nidec
