@@ -15,8 +15,8 @@ const LongitudinalLimits HONDA_BOSCH_LONG_LIMITS = {
   .max_accel = 200,   // accel is used for brakes
   .min_accel = -350,
 
-  .max_gas = 2000,
-  .inactive_gas = -30000,
+  .max_gas = 200,
+  .inactive_gas = -3000,
 };
 
 const LongitudinalLimits HONDA_NIDEC_LONG_LIMITS = {
@@ -310,7 +310,7 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
     accel = to_signed(accel, 11);
 
     int gas = (GET_BYTE(to_send, 0) << 8) | GET_BYTE(to_send, 1);
-    gas = to_signed(gas, 16);
+    gas = (to_signed(gas, 16) * 0.1);
 
     bool violation = false;
     violation |= longitudinal_accel_checks(accel, HONDA_BOSCH_LONG_LIMITS);
