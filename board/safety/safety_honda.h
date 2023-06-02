@@ -310,7 +310,7 @@ static bool honda_tx_hook(CANPacket_t *to_send) {
     accel = to_signed(accel, 11);
 
     int gas = (GET_BYTE(to_send, 0) << 8) | GET_BYTE(to_send, 1);
-    gas = (to_signed(gas, 16) * 0.1);
+    gas = to_signed(gas, 16);
 
     bool violation = false;
     violation |= longitudinal_accel_checks(accel, HONDA_BOSCH_LONG_LIMITS);
