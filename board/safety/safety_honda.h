@@ -15,8 +15,8 @@ const LongitudinalLimits HONDA_BOSCH_LONG_LIMITS = {
   .max_accel = 200,   // accel is used for brakes
   .min_accel = -350,
 
-  .max_gas = 200,
-  .inactive_gas = -3000,
+  .max_gas = 2000,
+  .inactive_gas = -30000,
 };
 
 const LongitudinalLimits HONDA_NIDEC_LONG_LIMITS = {
