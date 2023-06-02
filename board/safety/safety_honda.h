@@ -16,6 +16,7 @@ const LongitudinalLimits HONDA_BOSCH_LONG_LIMITS = {
   .min_accel = -350,
 
   .max_gas = 2000,
+  .min_gas = -13,
   .inactive_gas = -30000,
 };
 
