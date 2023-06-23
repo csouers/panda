@@ -529,10 +529,9 @@ class TestHondaBoschLongSafety(HondaButtonEnableBase, TestHondaBoschSafetyBase):
   """
     Covers the Honda Bosch safety mode with longitudinal control
   """
-  # TODO: correct gas factor to match dbc
-  NO_GAS = -30000
+  NO_GAS = -3000
   MIN_GAS = -4.0
-  MAX_GAS = 2000
+  MAX_GAS = 200
   MAX_ACCEL = 2.0  # accel is used for brakes, but openpilot can set positive values
   MIN_ACCEL = -3.5
 
@@ -568,10 +567,10 @@ class TestHondaBoschLongSafety(HondaButtonEnableBase, TestHondaBoschSafetyBase):
 
   def test_gas_safety_check(self):
     for controls_allowed in [True, False]:
-      for gas in np.arange(self.NO_GAS, self.MAX_GAS + 2000, 100):
-        accel = 0 if gas < 0 else gas / 1000
+      for gas in np.arange(self.NO_GAS, self.MAX_GAS + 200, 1):
+        accel = 0 if gas < self.MIN_GAS else gas / 100
         self.safety.set_controls_allowed(controls_allowed)
-        send = (controls_allowed and 0 <= gas <= self.MAX_GAS) or gas == self.NO_GAS
+        send = (controls_allowed and self.MIN_GAS <= gas <= self.MAX_GAS) or gas == self.NO_GAS
         self.assertEqual(send, self._tx(self._send_gas_brake_msg(gas, accel)), (controls_allowed, gas, accel))
 
   def test_brake_safety_check(self):
