@@ -550,7 +550,7 @@ class TestHondaBoschRadarlessSafety(HondaPcmEnableBase, TestHondaBoschRadarlessS
   def test_buttons(self):
     """
       If SET/RESUME button is sent by car/user, `honda_button_cnt` is set to BUTTON_TIMEOUT.
-      Subsequent frames of SCM_BUTTONS (25hz) with button of None or Cancel will decrement honda_button_cnt. 
+      Subsequent frames of SCM_BUTTONS (25hz) with button of None or Cancel will decrement honda_button_cnt.
       Allow TX of all buttons if honda_button_cnt != 0 when !controls_allowed, otherwise, only allow None or Cancel.
       System state remains tied to PcmEnable.
     """

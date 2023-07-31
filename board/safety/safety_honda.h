@@ -364,7 +364,7 @@ static int honda_tx_hook(CANPacket_t *to_send) {
     }
   }
 
-  // BUTTONS: safety for Bosch ACC with button spamming or intercepting: 
+  // BUTTONS: safety for Bosch ACC with button spamming or intercepting:
   // -Bosch HW w/radar-
   // Ensures that only the cancel button press is sent (VAL 2) when controls are off.
   // This avoids unintended engagements while still allowing resume spam.
@@ -433,7 +433,7 @@ static int honda_nidec_fwd_hook(int bus_num, int addr) {
     bus_fwd = 2;
   }
 
-  if (bus_num == 2) {
+  if (bus_num == 2) { 
     // block stock lkas messages and stock acc messages (if OP is doing ACC)
     bool is_lkas_msg = (addr == 0xE4) || (addr == 0x194) || (addr == 0x33D);
     bool is_acc_hud_msg = addr == 0x30C;
@@ -451,7 +451,7 @@ static int honda_bosch_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
   if (bus_num == 0) {
-    bool is_button_msg = addr == 0x296;  
+    bool is_button_msg = addr == 0x296;
     bool block_msg = is_button_msg && honda_bosch_radarless && !honda_bosch_long;
     if (!block_msg) {
       bus_fwd = 2;
