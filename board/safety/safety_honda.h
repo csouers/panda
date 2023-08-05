@@ -364,16 +364,25 @@ static int honda_tx_hook(CANPacket_t *to_send) {
     }
   }
 
-  // BUTTONS: safety for Bosch ACC with button spamming or intercepting:
-  // -Bosch HW w/radar-
-  // Ensures that only the cancel button press is sent (VAL 2) when controls are off.
-  // This avoids unintended engagements while still allowing resume spam.
+  // // BUTTONS: safety for Bosch ACC with button spamming or intercepting:
+  // // -Bosch HW w/radar-
+  // // Ensures that only the cancel button press is sent (VAL 2) when controls are off.
+  // // This avoids unintended engagements while still allowing resume spam.
 
-  // -Bosch Radarless-
-  // When controls are off, the user must press SET or RESUME to engage. Always allow cancel and idle/no button.
+  // // -Bosch Radarless-
+  // // When controls are off, the user must press SET or RESUME to engage. Always allow cancel and idle/no button.
+  // if ((addr == 0x296) && !controls_allowed && (bus == bus_buttons)) {
+  //   uint8_t button = ((GET_BYTE(to_send, 0) >> 5) & 0x7U);
+  //   if (((button > 0U) && (button != 2U)) && !(honda_bosch_radarless && honda_button_cnt)) {
+  //     tx = 0;
+  //   }
+  // }
+
+  // FORCE CANCEL: safety check only relevant when spamming the cancel button in Bosch HW
+  // ensuring that only the cancel button press is sent (VAL 2) when controls are off.
+  // This avoids unintended engagements while still allowing resume spam
   if ((addr == 0x296) && !controls_allowed && (bus == bus_buttons)) {
-    uint8_t button = ((GET_BYTE(to_send, 0) >> 5) & 0x7U);
-    if (((button > 0U) && (button != 2U)) && !(honda_bosch_radarless && honda_button_cnt)) {
+    if (((GET_BYTE(to_send, 0) >> 5) & 0x7U) != 2U) {
       tx = 0;
     }
   }
@@ -451,7 +460,12 @@ static int honda_bosch_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
   if (bus_num == 0) {
-    bus_fwd = 2;
+    // Radarless: forward buttons when not engaged
+    int is_button_msg = (addr == 0x296);
+    bool block_msg = is_button_msg && controls_allowed;
+    if (!block_msg) {
+      bus_fwd = 2;
+    }
   }
   if (bus_num == 2)  {
     int is_lkas_msg = (addr == 0xE4) || (addr == 0xE5) || (addr == 0x33D) || (addr == 0x33DA) || (addr == 0x33DB);
