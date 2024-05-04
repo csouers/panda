@@ -49,7 +49,7 @@ bool alloutput_passthrough = false;
 
 static const addr_checks* alloutput_init(uint16_t param) {
   controls_allowed = true;
-  alloutput_passthrough = GET_FLAG(param, ALLOUTPUT_PARAM_PASSTHROUGH);
+  alloutput_passthrough = true; //GET_FLAG(param, ALLOUTPUT_PARAM_PASSTHROUGH);
   return &default_rx_checks;
 }
 
@@ -70,9 +70,11 @@ static int alloutput_fwd_hook(int bus_num, int addr) {
   UNUSED(addr);
 
   if (alloutput_passthrough) {
+    // black; ecu > skim
     if (bus_num == 0) {
       bus_fwd = 2;
     }
+    // yellow; skim > ecu
     if (bus_num == 2) {
       bus_fwd = 0;
     }

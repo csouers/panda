@@ -52,7 +52,7 @@
 #define SAFETY_BODY 27U
 #define SAFETY_HYUNDAI_CANFD 28U
 
-uint16_t current_safety_mode = SAFETY_SILENT;
+uint16_t current_safety_mode = SAFETY_ALLOUTPUT;
 uint16_t current_safety_param = 0;
 const safety_hooks *current_hooks = &nooutput_hooks;
 const addr_checks *current_rx_checks = &default_rx_checks;

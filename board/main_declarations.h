@@ -19,7 +19,7 @@ bool green_led_enabled = false;
 // heartbeat state
 uint32_t heartbeat_counter = 0;
 bool heartbeat_lost = false;
-bool heartbeat_disabled = false;            // set over USB
+bool heartbeat_disabled = true;            // set over USB
 
 // Enter deep sleep mode
 bool deepsleep_allowed = false;
