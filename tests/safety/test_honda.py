@@ -19,6 +19,18 @@ class Btn:
 HONDA_NIDEC = 0
 HONDA_BOSCH = 1
 
+turnSignalCmdLeftMsg = b"\x30\x0a\x0f\x00\x00\x00\x00\x00"
+turnSignalCmdRightMsg = b"\x30\x0b\x0f\x00\x00\x00\x00\x00"
+turnSignalCmdCancelMsg = b"\x20"
+trunkCmdReleaseMsg = b"\x30\x09\x01\x00\x00\x00\x00\x00"
+
+def interceptor_msg(gas, addr):
+  to_send = common.make_msg(0, addr, 6)
+  to_send[0].data[0] = (gas & 0xFF00) >> 8
+  to_send[0].data[1] = gas & 0xFF
+  to_send[0].data[2] = (gas & 0xFF00) >> 8
+  to_send[0].data[3] = gas & 0xFF
+  return to_send
 
 # Honda safety has several different configurations tested here:
 #  * Nidec
@@ -136,6 +148,18 @@ class HondaButtonEnableBase(common.PandaCarSafetyTest):
     self._rx(self._button_msg(Btn.SET, main_on=True))
     self.assertTrue(self.safety.get_controls_allowed())
 
+  # Never allow dangerous commands; e.g. trunk release
+  def test_kwp_over_can(self):
+    self.safety.set_controls_allowed(0)
+    self.assertTrue(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdCancelMsg)))
+    self.assertFalse(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdLeftMsg)))
+    self.assertFalse(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, trunkCmdReleaseMsg)))
+    self.safety.set_controls_allowed(1)
+    self.assertTrue(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdCancelMsg)))
+    self.assertTrue(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdLeftMsg)))
+    self.assertTrue(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, turnSignalCmdRightMsg)))
+    self.assertFalse(self._tx(libpanda_py.make_CANPacket(0x16F118F0, 0, trunkCmdReleaseMsg)))
 
 class HondaPcmEnableBase(common.PandaCarSafetyTest):
   # pylint: disable=no-member,abstract-method
@@ -459,6 +483,7 @@ class TestHondaBoschLongSafety(HondaButtonEnableBase, TestHondaBoschSafetyBase):
     Covers the Honda Bosch safety mode with longitudinal control
   """
   NO_GAS = -30000
+  MIN_GAS = -40
   MAX_GAS = 2000
   MAX_ACCEL = 2.0  # accel is used for brakes, but openpilot can set positive values
   MIN_ACCEL = -3.5
@@ -495,10 +520,10 @@ class TestHondaBoschLongSafety(HondaButtonEnableBase, TestHondaBoschSafetyBase):
 
   def test_gas_safety_check(self):
     for controls_allowed in [True, False]:
-      for gas in np.arange(self.NO_GAS, self.MAX_GAS + 2000, 100):
-        accel = 0 if gas < 0 else gas / 1000
+      for gas in np.arange(self.NO_GAS, self.MAX_GAS + 200, 1):
+        accel = 0 if gas < self.MIN_GAS else gas / 1000
         self.safety.set_controls_allowed(controls_allowed)
-        send = (controls_allowed and 0 <= gas <= self.MAX_GAS) or gas == self.NO_GAS
+        send = (controls_allowed and self.MIN_GAS <= gas <= self.MAX_GAS) or gas == self.NO_GAS
         self.assertEqual(send, self._tx(self._send_gas_brake_msg(gas, accel)), (controls_allowed, gas, accel))
 
   def test_brake_safety_check(self):

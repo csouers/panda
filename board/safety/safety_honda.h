@@ -87,7 +87,7 @@ static void honda_rx_hook(const CANPacket_t *to_push) {
 
   // check ACC main state
   // 0x326 for all Bosch and some Nidec, 0x1A6 for some Nidec
-  if ((addr == 0x326) || (addr == 0x1A6)) {
+  if (((addr == 0x326) && (bus == pt_bus)) || (addr == 0x1A6)) {
     acc_main_on = GET_BIT(to_push, ((addr == 0x326) ? 28U : 47U));
     if (!acc_main_on) {
       controls_allowed = false;
@@ -173,6 +173,11 @@ static void honda_rx_hook(const CANPacket_t *to_push) {
   int bus_rdr_car = (honda_hw == HONDA_BOSCH) ? 0 : 2;  // radar bus, car side
   bool stock_ecu_detected = false;
 
+  // // TODO: tick the body harness gatewayheartbeat. If we lose contact with the OP, should we go not controls_allowed???
+  // if ((addr == 0x801) && (len == 8)) {
+  //
+  // }
+
   // If steering controls messages are received on the destination bus, it's an indication
   // that the relay might be malfunctioning
   if ((addr == 0xE4) || (addr == 0x194)) {
@@ -197,6 +202,7 @@ static bool honda_tx_hook(const CANPacket_t *to_send) {
     .min_accel = -350,
 
     .max_gas = 2000,
+    .min_gas = -40,
     .inactive_gas = -30000,
   };
 
@@ -299,11 +305,29 @@ static bool honda_tx_hook(const CANPacket_t *to_send) {
     }
   }
 
+  // KWP over CAN. Allow only short turn signal request and cancel
+  // TODO: move to gateway firmware
+  if (addr == 0x16F118F0){
+    bool signalCmd = ((GET_LEN(to_send) == 8U) && ((GET_BYTES(to_send, 0, 4) == 0x000F0A30U) || (GET_BYTES(to_send, 0, 4) == 0x000F0B30U)) && (GET_BYTES(to_send, 4, 4) == 0x0U));
+    bool cancelCmd = ((GET_LEN(to_send) == 1U) && (GET_BYTE(to_send, 0) == 0x20U));
+    // always allow cancel
+    if (!cancelCmd) {
+      if (!controls_allowed) {
+        tx = false;
+      }
+      else {
+        if (!signalCmd) {
+          tx = false;
+        }
+      }
+    }
+  }
+
   return tx;
 }
 
 static safety_config honda_nidec_init(uint16_t param) {
-  static CanMsg HONDA_N_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x30C, 0, 8}, {0x33D, 0, 5}};
+  static CanMsg HONDA_N_TX_MSGS[] = {{0xE4, 0, 5}, {0x194, 0, 4}, {0x1FA, 0, 8}, {0x30C, 0, 8}, {0x33D, 0, 5}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}};
 
   const uint16_t HONDA_PARAM_NIDEC_ALT = 4;
 
@@ -321,7 +345,7 @@ static safety_config honda_nidec_init(uint16_t param) {
 
   if (enable_nidec_alt) {
     // For Nidecs with main on signal on an alternate msg (missing 0x326)
-    static RxCheck honda_nidec_alt_rx_checks[] = { 
+    static RxCheck honda_nidec_alt_rx_checks[] = {
       HONDA_COMMON_NO_SCM_FEEDBACK_RX_CHECKS(0)
     };
 
@@ -336,10 +360,10 @@ static safety_config honda_nidec_init(uint16_t param) {
 }
 
 static safety_config honda_bosch_init(uint16_t param) {
-  static CanMsg HONDA_BOSCH_TX_MSGS[] = {{0xE4, 0, 5}, {0xE5, 0, 8}, {0x296, 1, 4}, {0x33D, 0, 5}, {0x33DA, 0, 5}, {0x33DB, 0, 8}};  // Bosch
-  static CanMsg HONDA_BOSCH_LONG_TX_MSGS[] = {{0xE4, 1, 5}, {0x1DF, 1, 8}, {0x1EF, 1, 8}, {0x1FA, 1, 8}, {0x30C, 1, 8}, {0x33D, 1, 5}, {0x33DA, 1, 5}, {0x33DB, 1, 8}, {0x39F, 1, 8}, {0x18DAB0F1, 1, 8}};  // Bosch w/ gas and brakes
-  static CanMsg HONDA_RADARLESS_TX_MSGS[] = {{0xE4, 0, 5}, {0x296, 2, 4}, {0x33D, 0, 8}};  // Bosch radarless
-  static CanMsg HONDA_RADARLESS_LONG_TX_MSGS[] = {{0xE4, 0, 5}, {0x33D, 0, 8}, {0x1C8, 0, 8}, {0x30C, 0, 8}};  // Bosch radarless w/ gas and brakes
+  static CanMsg HONDA_BOSCH_TX_MSGS[] = {{0xE4, 0, 5}, {0xE5, 0, 8}, {0x296, 1, 4}, {0x33D, 0, 5}, {0x33DA, 0, 5}, {0x33DB, 0, 8}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}};  // Bosch w/ body
+  static CanMsg HONDA_BOSCH_LONG_TX_MSGS[] = {{0xE4, 1, 5}, {0x1DF, 1, 8}, {0x1EF, 1, 8}, {0x1FA, 1, 8}, {0x30C, 1, 8}, {0x33D, 1, 5}, {0x33DA, 1, 5}, {0x33DB, 1, 8}, {0x39F, 1, 8}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}, {0x18DAB0F1, 1, 8}};  // Bosch w/ gas and brakes and body
+  static CanMsg HONDA_RADARLESS_TX_MSGS[] = {{0xE4, 0, 5}, {0x296, 2, 4}, {0x33D, 0, 8}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}};  // Bosch radarless
+  static CanMsg HONDA_RADARLESS_LONG_TX_MSGS[] = {{0xE4, 0, 5}, {0x33D, 0, 8}, {0x1C8, 0, 8}, {0x30C, 0, 8}, {0x16F118F0, 0, 8}, {0x16F118F0, 0, 1}};  // Bosch radarless w/ gas and brakes
 
   const uint16_t HONDA_PARAM_ALT_BRAKE = 1;
   const uint16_t HONDA_PARAM_RADARLESS = 8;
