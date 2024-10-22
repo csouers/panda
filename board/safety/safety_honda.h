@@ -178,13 +178,15 @@ static void honda_rx_hook(const CANPacket_t *to_push) {
   //
   // }
 
+  // Disable because can adapter
   // If steering controls messages are received on the destination bus, it's an indication
   // that the relay might be malfunctioning
-  if ((addr == 0xE4) || (addr == 0x194)) {
-    if (((honda_hw != HONDA_NIDEC) && (bus == bus_rdr_car)) || ((honda_hw == HONDA_NIDEC) && (bus == 0))) {
-      stock_ecu_detected = true;
-    }
-  }
+  // if ((addr == 0xE4) || (addr == 0x194)) {
+  //   if (((honda_hw != HONDA_NIDEC) && (bus == bus_rdr_car)) || ((honda_hw == HONDA_NIDEC) && (bus == 0))) {
+  //     stock_ecu_detected = true;
+  //   }
+  // }
+
   // If Honda Bosch longitudinal mode is selected we need to ensure the radar is turned off
   // Verify this by ensuring ACC_CONTROL (0x1DF) is not received on the PT bus
   if (honda_bosch_long && !honda_bosch_radarless && (bus == pt_bus) && (addr == 0x1DF)) {
