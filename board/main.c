@@ -105,7 +105,7 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
       can_silent = ALL_CAN_LIVE;
       break;
     default:
-      set_intercept_relay(true, false);
+      set_intercept_relay(false, false);
       heartbeat_counter = 0U;
       heartbeat_lost = false;
       if (current_board->has_obd) {
