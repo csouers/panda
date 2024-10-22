@@ -170,21 +170,11 @@ static void honda_rx_hook(const CANPacket_t *to_push) {
     }
   }
 
-  int bus_rdr_car = (honda_hw == HONDA_BOSCH) ? 0 : 2;  // radar bus, car side
   bool stock_ecu_detected = false;
 
   // // TODO: tick the body harness gatewayheartbeat. If we lose contact with the OP, should we go not controls_allowed???
   // if ((addr == 0x801) && (len == 8)) {
   //
-  // }
-
-  // Disable because can adapter
-  // If steering controls messages are received on the destination bus, it's an indication
-  // that the relay might be malfunctioning
-  // if ((addr == 0xE4) || (addr == 0x194)) {
-  //   if (((honda_hw != HONDA_NIDEC) && (bus == bus_rdr_car)) || ((honda_hw == HONDA_NIDEC) && (bus == 0))) {
-  //     stock_ecu_detected = true;
-  //   }
   // }
 
   // If Honda Bosch longitudinal mode is selected we need to ensure the radar is turned off
@@ -448,13 +438,6 @@ static int honda_nidec_fwd_hook(int bus_num, int addr) {
   return bus_fwd;
 }
 
-static int honda_bosch_fwd_hook(int bus_num, int addr) {
-  UNUSED(bus_num);
-  UNUSED(addr);
-
-  return -1;
-}
-
 const safety_hooks honda_nidec_hooks = {
   .init = honda_nidec_init,
   .rx = honda_rx_hook,
@@ -469,7 +452,7 @@ const safety_hooks honda_bosch_hooks = {
   .init = honda_bosch_init,
   .rx = honda_rx_hook,
   .tx = honda_tx_hook,
-  .fwd = honda_bosch_fwd_hook,
+  .fwd = default_fwd_hook,
   .get_counter = honda_get_counter,
   .get_checksum = honda_get_checksum,
   .compute_checksum = honda_compute_checksum,
