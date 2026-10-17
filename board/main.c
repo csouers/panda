@@ -68,7 +68,7 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
       can_silent = false;
       break;
     default:
-      set_intercept_relay(true, false);
+      set_intercept_relay(false, false);
       heartbeat_counter = 0U;
       heartbeat_lost = false;
       current_board->set_can_mode(CAN_MODE_NORMAL);

@@ -43,7 +43,8 @@ void set_power_save_state(bool enable) {
       llcan_irq_enable(cans[1]);
     }
 
-    enable_can_transceivers(!enable);
+    // custom: keep CAN transceivers enabled, even when entering power save
+    enable_can_transceivers(true);
 
     // Switch off IR when in power saving
     if(enable){
